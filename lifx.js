@@ -15,6 +15,8 @@ module.exports = {
 		});
 
 		UDPClient.on("message", function (msg, rinfo) {
+
+			console.log(" U- " + msg.toString("hex"));
 			if (msg.length > 4 && msg[3] == 0x54) {
 				if (!found) {
 					found = true;
@@ -32,6 +34,7 @@ module.exports = {
 					clearInterval(intervalID);
 				} else {
 					var message = new Buffer([0x24, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00]);
+					console.log(" U+ " + message.toString("hex"));
 					UDPClient.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
 						if (err) {
 							cb(err);
@@ -71,13 +74,16 @@ function bulb(addr) {
 		this.port = addr.port;
 	}
 
-	client = net.connect(56700, '10.1.0.80', function() { //'connect' listener
-		//console.log('client connected');
-	});
+	function connect() {
+		client = net.connect(56700, '10.1.0.80', function() { //'connect' listener
+			//console.log('client connected');
+		});
+	}
+
+	connect();
+
 	client.on('data', function(data) {
-		//console.log("  - " + "TCP got data (" + data.length + " bytes)");
-		console.log("  - " + data.toString("hex"));
-		//console.log("  - " + data.toString("ascii"));
+		console.log(" T- " + data.toString("hex"));
 		//
 		// 5800005400000000d073d500239d0000d073d500239d000000000000000000006b0000009ed400008396f00a000000004b6576696e2773207369646500000000000000000000000000000000000000000000000000000000 // Bulb status
 		// 5800005400000000d073d5001ba90000d073d500239d000000000000000000006b0000009ed400008396f00a000000004c6f726e612773207369646500000000000000000000000000000000000000000000000000000000
@@ -102,6 +108,7 @@ function bulb(addr) {
 	});
 	client.on('end', function() {
 		console.log('TCP client disconnected');
+		//connect();
 	});
 
 	var self = this;
@@ -115,7 +122,7 @@ function bulb(addr) {
 			standardPrefix,
 			message
 		]);
-		console.log("  + " + sendBuf.toString("hex"));
+		console.log(" T+ " + sendBuf.toString("hex"));
 		client.write(sendBuf);
 	};
 
