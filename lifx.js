@@ -2,24 +2,29 @@ var dgram = require('dgram');
 var net = require('net');
 var util = require('util');
 
+var UDPClient = dgram.createSocket("udp4");
+var port = 56700;
+var found = false;
+
 module.exports = {
 
 	discover: function(cb) {
-		var c = dgram.createSocket("udp4");
-		var port = 56700;
-		var found = false;
-		c.on("error", function (err) {
-			console.log("DGram error " + err);
+
+		UDPClient.on("error", function (err) {
+			console.log("UDP error " + err);
 		});
-		c.on("message", function (msg, rinfo) {
+
+		UDPClient.on("message", function (msg, rinfo) {
 			if (msg.length > 4 && msg[3] == 0x54) {
-				found = true;
-				c.close(); // Don't do this when we want ongoing status messages
-				cb(null, {address:rinfo.address, port:rinfo.port, family:rinfo.family} );
+				if (!found) {
+					found = true;
+					cb(null, {address:rinfo.address, port:rinfo.port, family:rinfo.family} );
+				}
 			}
 		});
-		c.bind(port, function() {
-			c.setBroadcast(true);
+
+		UDPClient.bind(port, function() {
+			UDPClient.setBroadcast(true);
 			var intervalID;
 			// Now send the discovery packets
 			intervalID = setInterval(function() {
@@ -27,14 +32,15 @@ module.exports = {
 					clearInterval(intervalID);
 				} else {
 					var message = new Buffer([0x24, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00]);
-					c.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
+					UDPClient.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
 						if (err) {
 							cb(err);
 						}
 					});
 				}
-			}, 100);
+			}, 300);
 		});
+
 	},
 
 	init: function(addr, cb) {
@@ -69,8 +75,30 @@ function bulb(addr) {
 		//console.log('client connected');
 	});
 	client.on('data', function(data) {
-		console.log("  - " + "TCP got data (" + data.length + " bytes)");
+		//console.log("  - " + "TCP got data (" + data.length + " bytes)");
 		console.log("  - " + data.toString("hex"));
+		//console.log("  - " + data.toString("ascii"));
+		//
+		// 5800005400000000d073d500239d0000d073d500239d000000000000000000006b0000009ed400008396f00a000000004b6576696e2773207369646500000000000000000000000000000000000000000000000000000000 // Bulb status
+		// 5800005400000000d073d5001ba90000d073d500239d000000000000000000006b0000009ed400008396f00a000000004c6f726e612773207369646500000000000000000000000000000000000000000000000000000000
+		// 5800005400000000d073d500239d0000d073d500239d000000000000000000006b00000015ccffff8f02ac0d0000ffff4b6576696e2773207369646500000000000000000000000000000000000000000000000000000000
+		// 2600005400000000d073d5001ba90000d073d500239d00000000000000000000160000000000 // Lights off
+		// 2600005400000000d073d500239d0000d073d500239d0000000000000000000016000000ffff // Lights on
+		
+		switch (data[32]) {
+
+			case 0x6b:
+				console.log(" * Found a bulb: " + data.slice(48).toString("ascii"));
+				break;
+
+			case 0x16:
+				if (data[37] == 0xff) {
+					console.log(" * Light is on");
+				} else {
+					console.log(" * Light is off");
+				}
+				break;
+		}
 	});
 	client.on('end', function() {
 		console.log('TCP client disconnected');
@@ -87,6 +115,7 @@ function bulb(addr) {
 			standardPrefix,
 			message
 		]);
+		console.log("  + " + sendBuf.toString("hex"));
 		client.write(sendBuf);
 	};
 
@@ -115,6 +144,7 @@ function bulb(addr) {
 	};
 
 	this.close = function() {
+		UDPClient.close();
 		client.end();
 	};
 

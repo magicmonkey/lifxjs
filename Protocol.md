@@ -31,6 +31,23 @@ control the bulbs.
 After finding a controller bulb, open a TCP connection to it on port 56700.
 All commands are sent down this stream.
 
+## Feedback messages
+
+The controller bulb appears to send data to the network as UDP packets, but it
+also sends similar packets down the TCP connection.  These packets seem to have
+the first 8 bytes or so as a header (including the packet length at the start)
+and then the next 24 bytes as a bulb address.  If you have more than one bulb,
+you will get a packet for each bulb with this address field changed to tell you
+which bulb the packet is referring to.
+
+The next byte (33) seems to be a packet type indicator, and the data after this
+depends on what this byte is.
+
+ * Packet type 0x16 seems to be an on/off indicator
+ * Packet type 0x6b seems to be a complete status indicator, containing 15
+   bytes of config (maybe hue / sat / lum?) and then the rest is the name given
+   to the bulb by the iPhone app
+
 _More to come_
 
 
