@@ -21,6 +21,7 @@ There are 2 files:
 The library is made up of network packets, observed by tcpdump'ing the traffic
 from the official iPhone app.
 
-Hopefully LIFXLabs will release an official spec for the network protocol which
-will make this a lot easier, or even not needed.
+My observations of the network protocol are documented in [this
+doc](Protocol.md).  Hopefully LIFXLabs will release an official spec for the
+network protocol which will make this a lot easier, or even not needed.
 
