@@ -18,3 +18,9 @@ There are 2 files:
   * lifx.js which is the actual library
   * cli.js which is an example CLI app using the library
 
+The library is made up of network packets, observed by tcpdump'ing the traffic
+from the official iPhone app.
+
+Hopefully LIFXLabs will release an official spec for the network protocol which
+will make this a lot easier, or even not needed.
+
