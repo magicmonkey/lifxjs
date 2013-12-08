@@ -99,7 +99,9 @@ bulbs then execute their own fade towards this state.
  * Bytes 47 - 48: Unknown, but always zeroes
 
 Note that for the "whites", the app always sets hue and saturation (bytes 37,
-38, 39, and 40) to 0x00.
+38, 39, and 40) to 0x00.  The white colour appears to have a fairly narrow
+range, such that 0-10 is very yellow, 14 is a natural white, then 15-30 fades
+to blue.  Anything beyond that seems to be very blue.
 
 ### Packet type 0x65 - Status request
 
