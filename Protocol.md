@@ -113,6 +113,16 @@ bulbs are at the present time.
  * Bytes 46 - 47:  On/off - 0xffff means on, and 0x0000 means off.
  * Bytes 48 - end: The name of the bulb as set by the iPhone app.
 
+### Packet type 0x16
+
+This is sent by the bulbs to the apps to say whether the bulbs are on or off.
+It is generally sent as a result of an on/off command from the apps.
+
+ * Byte  32:       0x16
+ * Bytes 33 - 35:  Always zeroes.
+ * Bytes 36 - 37:  On/off indicator; 0x0000 means the bulbs are off, and 0xffff
+                   means that the bulbs are on.
+
 
 _More to come_
 
