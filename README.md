@@ -77,7 +77,11 @@ underlying details).
 * fadeTime says how quickly the bulbs should move to the given state, and seem
   to roughly be in milliseconds.  Use 0 for an immediate change.
 
-Sending commands to individual bulbs is not yet implemented...
+You can also send a raw command to all bulbs using ```gw.sendToAll(buffer)```
+which will get the packet preamble prepended.  Similarly, to send a raw command
+to an individual bulb, use ```gw.sendToOne(buffer, bulb)``` passing in either a
+bulb object from the gw.bulbs array, or a buffer object with just an 8-byte
+LIFX address.
 
 If you want to see debug messages (including network traffic) then call
 

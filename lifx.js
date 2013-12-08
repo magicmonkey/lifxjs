@@ -14,23 +14,6 @@ function Bulb(_lifxAddress, _gw, _name) {
 	this.name        = _name;
 }
 
-Bulb.prototype.send = function(message) {
-	var standardPrefix = new Buffer([0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-	// Splice in the address of our discovered gateway bulb to replace these bytes --------------------------------------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	// Splice in the address of this bulb to replace these bytes --------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	this.gw.lifxAddress.copy(standardPrefix, 15);
-	this.lifxAddress.copy(standardPrefix, 7);
-
-	var bLen = new Buffer([message.length + standardPrefix.length + 1]);
-	var sendBuf = Buffer.concat([
-		bLen,
-		standardPrefix,
-		message
-	]);
-	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
-	this.gw.tcpClient.write(sendBuf);
-};
-
 // This represents the gateway, and its respective functions (eg discovery, send-to-all etc)
 function Gateway(addr) {
 	// TODO: validation...
@@ -97,6 +80,36 @@ Gateway.prototype.connect = function(cb) {
 // This method requests that the gateway tells about all of its bulbs
 Gateway.prototype.findBulbs = function(cb) {
 	this.sendToAll(new Buffer([0x65, 0x00, 0x00, 0x00]));
+};
+
+// Send a raw command to an individual bulb
+Gateway.prototype.sendToOne = function(message, bulb) {
+	var targetAddr;
+	if (Buffer.isBuffer(bulb)) {
+		targetAddr = bulb;
+	} else {
+		if (typeof bulb.lifxAddress == 'undefined') {
+			// No idea what we've been passed as a bulb.  Erm.
+			throw new Exception("Unknown thing been passed instead of a bulb");
+		}
+		targetAddr = bulb.lifxAddress;
+	}
+
+	var standardPrefix = new Buffer([0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+	// Splice in the address of our discovered gateway bulb to replace these bytes --------------------------------------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	// Splice in the address of this bulb to replace these bytes --------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	this.lifxAddress.copy(standardPrefix, 15);
+	targetAddr.copy(standardPrefix, 7);
+
+	var bLen = new Buffer([message.length + standardPrefix.length + 1]);
+	var sendBuf = Buffer.concat([
+		bLen,
+		standardPrefix,
+		message
+	]);
+	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
+	this.tcpClient.write(sendBuf);
+
 };
 
 // Send a raw command to all bulbs attached to this gateway
