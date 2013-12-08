@@ -69,6 +69,17 @@ bulbs then execute their own fade towards this state.
  * Bytes 45 - 46: These say how long the fade should take.
  * Bytes 47 - 48: Unknown, but always zeroes
 
+### Packet type 0x15
+
+This packet type turns the bulbs on and off.
+
+ * Byte  32:      0x15
+ * Bytes 33 - 35: Always zeroes.
+ * Bytes 36:      0x01 to turn on, or 0x00 to turn off
+ * Bytes 37:      Always zero.
+
+Will generally cause a packet 0x16 in response.
+
 ## Feedback messages
 
 The controller bulb appears to send data to the network as UDP packets, but it
