@@ -54,6 +54,9 @@ The commands to change the colour are sent with packet type 0x66.
 
 ### Packet type 0x66
 
+These packets are used by the apps to send a target state to the bulbs; the
+bulbs then execute their own fade towards this state.
+
  * Byte  32:      0x66
  * Bytes 33 - 36: Always zeroes.
  * Bytes 37 - 38: These are the "hue" (ie the colour), and are the only bytes
@@ -64,11 +67,8 @@ The commands to change the colour are sent with packet type 0x66.
                   of the colour).
  * Bytes 41 - 42: These are the "luminance" (ie the brightness)
  * Bytes 43 - 44: Unknown, but these seem to always be 0xac 0x0d
- * Bytes 45 - 46: Unknown, but these seem to be 0x90 0x01 or 0x13 0x05
+ * Bytes 45 - 46: These say how long the fade should take.
  * Bytes 47 - 48: Unknown, but always zeroes
-
-I would guess that some of the unknown bytes (maybe 45,46?) are to do with how
-fast the bulbs fade from their current state to the target state.
 
 ## Feedback messages
 
@@ -84,10 +84,24 @@ The packet types (byte 33) which I've seen so far:
  * 0x03 seems to be an introduction packet, which you get when first
    discovering a network
  * 0x16 seems to be an on/off indicator
- * 0x6b seems to be a complete status indicator, containing 15 bytes of config
-   (maybe hue / sat / lum?) and then the rest is the name given to the bulb by
-   the iPhone app
+ * 0x6b seems to be a complete status indicator
 
+### Packet type 0x6b
+
+This is sent by the bulbs to the apps to indicate the current state of the
+bulbs.  If mid-fade, then this packet will show a snapshot of where the
+bulbs are at the present time.
+
+ * Byte  32:       0x6b
+ * Bytes 33 - 35:  Always zeroes.
+ * Bytes 36 - 37:  The "hue" (ie the colour).  It wraps around at 0xff 0xff back
+                   to 0x00 0x00 which is a primary red colour.
+ * Bytes 38 - 39:  Always 0xff 0xff.
+ * Bytes 40 - 41:  The "luminance" (ie the brightness).
+ * Bytes 42 - 43:  Unknown, but these seem to always be 0xac 0x0d.
+ * Bytes 44 - 45:  Unknown, but these seem to be zeroes.
+ * Bytes 46 - 47:  On/off - 0xffff means on, and 0x0000 means off.
+ * Bytes 48 - end: The name of the bulb as set by the iPhone app.
 
 _More to come_
 
