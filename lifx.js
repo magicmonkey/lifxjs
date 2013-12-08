@@ -125,16 +125,19 @@ function bulb(addr) {
 		client.write(sendBuf);
 	};
 
+	var i = 0;
 	this.test1 = function() {
-		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfe, 0xff, 0xff, 0x02, 0x02, 0xac, 0x0d, 0x00, 0x00, 0x00, 0x00]));
-		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^              ^^^^^^^^^^
-		//                                                              hue      saturation  luminance                 timing
+		i = (i+5) % 255; console.log("Colour value is " + i);
+		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x00, i,    0xff, 0xff, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]));
+		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^
+		//                                                              hue      saturation  luminance   white colour  timing
 	};
 
 	this.test2 = function() {
-		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfe, 0x00, 0x3a, 0x02, 0x02, 0xac, 0x0d, 0x00, 0x00, 0x00, 0x00]));
-		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^              ^^^^^^^^^^
-		//                                                              hue      saturation  luminance                 timing
+		i = (i+250) % 255; console.log("Colour value is " + i);
+		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x00, i,    0xff, 0xff, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]));
+		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^
+		//                                                              hue      saturation  luminance   white colour  timing
 	};
 
 	// Pass in 16-bit numbers for each param - they will be byte shuffled as appropriate

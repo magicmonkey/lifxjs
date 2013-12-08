@@ -28,6 +28,8 @@ async.series([
 		console.log("Press 3 to turn the lights a dim red");
 		console.log("Press 4 to turn the lights a dim purple");
 		console.log("Press 5 to turn the lights a bright white");
+		console.log("Press 6 to cycle forwards through colours");
+		console.log("Press 7 to cycle backwards through colours");
 		console.log("Press a to request an info update from the lights");
 
 		var stdin = process.openStdin();
@@ -64,12 +66,12 @@ async.series([
 					break;
 
 				case 0x36: // 6
-					console.log("Test 1");
+					console.log("Test 1 (colour cycle forwards)");
 					bulb.test1();
 					break;
 
 				case 0x37: // 7
-					console.log("Test 2");
+					console.log("Test 2 (colour cycle backwards)");
 					bulb.test2();
 					break;
 
