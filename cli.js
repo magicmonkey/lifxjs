@@ -8,7 +8,6 @@ lifx.Gateway.discoverAndInit(function(err, _gw) {
 	if (err) {
 		console.log("Err " + err);
 	} else {
-		console.log("gw " + util.inspect(gw));
 		gw = _gw;
 	}
 });
@@ -21,7 +20,9 @@ console.log("Press 4 to turn the lights a dim purple");
 console.log("Press 5 to turn the lights a bright white");
 console.log("Press 6 to cycle forwards through colours");
 console.log("Press 7 to cycle backwards through colours");
-console.log("Press a to request an info update from the lights");
+console.log("Press 8 to show debug messages including network traffic");
+console.log("Press 9 to hide debug messages including network traffic");
+//console.log("Press a to request an info update from the lights");
 
 var stdin = process.openStdin();
 process.stdin.setRawMode(true)
@@ -68,8 +69,18 @@ stdin.on('data', function (key) {
 			gw.lightsColour(cycledColour, 0xffff, 0x0200, 0x0000, 0x0000);
 			break;
 
+		case 0x38: // 8
+			console.log("Enabling debug");
+			gw.debug(true);
+			break;
+
+		case 0x39: // 9
+			console.log("Disabling debug");
+			gw.debug(false);
+			break;
+
 		case 0x61: // a
-			console.log("Requesting info...");
+			console.log("Requesting info");
 			gw.findBulbs();
 			break;
 
