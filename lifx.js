@@ -7,16 +7,34 @@ var found = false;
 
 var debug = false;
 
-
 // This represents each individual bulb, and the operations on that bulb
-function Bulb(_lifxAddress) {
+function Bulb(_lifxAddress, _gw, _name) {
 	this.lifxAddress = _lifxAddress;
+	this.gw          = _gw;
+	this.name        = _name;
 }
+
+Bulb.prototype.send = function(message) {
+	var standardPrefix = new Buffer([0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+	// Splice in the address of our discovered gateway bulb to replace these bytes --------------------------------------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	// Splice in the address of this bulb to replace these bytes --------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	this.gw.lifxAddress.copy(standardPrefix, 15);
+	this.lifxAddress.copy(standardPrefix, 7);
+
+	var bLen = new Buffer([message.length + standardPrefix.length + 1]);
+	var sendBuf = Buffer.concat([
+		bLen,
+		standardPrefix,
+		message
+	]);
+	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
+	this.gw.tcpClient.write(sendBuf);
+};
 
 // This represents the gateway, and its respective functions (eg discovery, send-to-all etc)
 function Gateway(addr) {
 	// TODO: validation...
-	this.bulbs = {};
+	this.bulbs = new Array();
 	this.ipAddress = {ip:addr.address, port:addr.port, family:addr.family};
 	this.lifxAddress = addr.gwBulb;
 	this.tcpClient = null;
@@ -28,13 +46,23 @@ Gateway.prototype.debug = function(d) {
 
 Gateway.prototype.addDiscoveredBulb = function(lifxAddress, bulbName) {
 	var strAddress = lifxAddress.toString('hex');
-	if (typeof this.bulbs[strAddress] == 'undefined') {
+
+	// See if we've already got the bulb
+	var gotBulb = false;
+	for (var i in this.bulbs) {
+		if (this.bulbs[i].lifxAddress.toString('hex') == lifxAddress.toString('hex')) {
+			gotBulb = true;
+			break;
+		}
+	}
+	if (!gotBulb) {
 		// It's a new bulb
 		console.log("*** New bulb found (" + bulbName + ") ***");
-		this.bulbs[strAddress] = new Bulb(lifxAddress);
+		this.bulbs.push(new Bulb(lifxAddress, this, bulbName.toString('ascii').replace(/\0/g, '')));
 	}
 };
 
+// Open a control connection (over TCP) to the gateway node
 Gateway.prototype.connect = function(cb) {
 	var self = this;
 	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip, function() { //'connect' listener
@@ -66,10 +94,12 @@ Gateway.prototype.connect = function(cb) {
 	});
 }
 
+// This method requests that the gateway tells about all of its bulbs
 Gateway.prototype.findBulbs = function(cb) {
 	this.sendToAll(new Buffer([0x65, 0x00, 0x00, 0x00]));
 };
 
+// Send a raw command to all bulbs attached to this gateway
 Gateway.prototype.sendToAll = function(message) {
 	var standardPrefix = new Buffer([0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 	// Splice in the address of our discovered gateway bulb to replace these bytes --------------------------------------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -85,10 +115,12 @@ Gateway.prototype.sendToAll = function(message) {
 	this.tcpClient.write(sendBuf);
 };
 
+// Close the connection to this gateway
 Gateway.prototype.close = function() {
 	this.tcpClient.end();
 };
 
+// Initiate discovery of a gateway bulb on this network, and when one is found, initialise it
 Gateway.discoverAndInit = function(cb) {
 	Gateway.discover(function(err, addr) {
 		if (err) {
@@ -99,6 +131,7 @@ Gateway.discoverAndInit = function(cb) {
 	});
 };
 
+// Once a gateway bulb is found, initialise our connection to it
 Gateway.init = function(addr, cb) {
 	var g = new Gateway(addr);
 	g.connect(function() {
@@ -107,6 +140,7 @@ Gateway.init = function(addr, cb) {
 	cb(null, g);
 };
 
+// Find a gateway bulb on this network
 Gateway.discover = function(cb) {
 
 	var UDPClient = dgram.createSocket("udp4");
@@ -148,14 +182,17 @@ Gateway.discover = function(cb) {
 	});
 };
 
+// Turn all lights on
 Gateway.prototype.lightsOn = function() {
 	this.sendToAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x01, 0x00]));
 };
 
+// Turn all lights off
 Gateway.prototype.lightsOff = function() {
 	this.sendToAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x00, 0x00]));
 };
 
+// Set all bulbs to a particular colour
 // Pass in 16-bit numbers for each param - they will be byte shuffled as appropriate
 Gateway.prototype.lightsColour = function(hue, sat, lum, whitecol, timing) {
 	var message = new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x9e, 0xd4, 0xff, 0xff, 0x8f, 0x02, 0xac, 0x0d, 0x13, 0x05, 0x00, 0x00]);
