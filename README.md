@@ -79,3 +79,10 @@ underlying details).
 
 Sending commands to individual bulbs is not yet implemented...
 
+If you want to see debug messages (including network traffic) then call
+
+```JavaScript
+gw.debug(true);
+```
+
+
