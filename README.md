@@ -14,6 +14,8 @@ they are already attached to your network.
 Ideally, I'll end up with a nice little NodeJS library which can be used to
 build apps with.
 
+_Bonus: I've made a (very) crude web interface in the "web" branch_
+
 ## Files
 
 There are 2 files:
