@@ -137,6 +137,25 @@ function bulb(addr) {
 		//                                                              hue      saturation  luminance                 timing
 	};
 
+	// Pass in 16-bit numbers for each param - they will be byte shuffled as appropriate
+	this.lightsColour = function(hue, sat, lum, timing) {
+		var message = new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x9e, 0xd4, 0xff, 0xff, 0x8f, 0x02, 0xac, 0x0d, 0x13, 0x05, 0x00, 0x00]);
+		//                                                      ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^              ^^^^^^^^^^
+		//                                                         hue      saturation  luminance                 timing
+		message[5]  = (hue & 0x00ff);
+		message[6]  = (hue & 0xff00) >> 8;
+		message[7]  = (sat & 0x00ff);
+		message[8]  = (sat & 0xff00) >> 8;
+		message[9]  = (lum & 0x00ff);
+		message[10] = (lum & 0xff00) >> 8;
+		message[13] = (timing & 0x00ff);
+		message[14] = (timing & 0xff00) >> 8;
+
+		console.log(util.inspect(message));
+		self.sendRawPacket(message);
+		
+	};
+
 	this.lightsOn = function() {
 		self.sendRawPacket(new Buffer([0x15, 0x00, 0x00, 0x00, 0x01, 0x00]));
 	};
@@ -146,15 +165,11 @@ function bulb(addr) {
 	};
 
 	this.red = function() {
-		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x9e, 0xd4, 0xff, 0xff, 0x8f, 0x02, 0xac, 0x0d, 0x13, 0x05, 0x00, 0x00]));
-		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^              ^^^^^^^^^^
-		//                                                              hue      saturation  luminance                 timing
+		self.lightsColour(0xd49e, 0xffff, 0x028f, 0x0513);
 	};
 
 	this.purple = function() {
-		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x15, 0xcc, 0xff, 0xff, 0x8f, 0x02, 0xac, 0x0d, 0x13, 0x05, 0x00, 0x00]));
-		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^              ^^^^^^^^^^
-		//                                                              hue      saturation  luminance                 timing
+		self.lightsColour(0xcc15, 0xffff, 0x028f, 0x0513);
 	};
 
 	this.brightWhite = function() {
