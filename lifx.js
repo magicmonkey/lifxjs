@@ -188,19 +188,29 @@ Gateway.discover = function(cb) {
 	});
 };
 
+Gateway.prototype.sendToOneOrAll = function(command, /* optional */bulb) {
+	if (typeof bulb == 'undefined') {
+		this.sendToAll(command);
+	} else {
+		this.sendToOne(command, bulb);
+	}
+};
+
+/////// Fun methods ////////
+
 // Turn all lights on
-Gateway.prototype.lightsOn = function() {
-	this.sendToAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x01, 0x00]));
+Gateway.prototype.lightsOn = function(/* optional */bulb) {
+	this.sendToOneOrAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x01, 0x00]), bulb);
 };
 
 // Turn all lights off
-Gateway.prototype.lightsOff = function() {
-	this.sendToAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x00, 0x00]));
+Gateway.prototype.lightsOff = function(/* optional */bulb) {
+	this.sendToOneOrAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x00, 0x00]), bulb);
 };
 
 // Set all bulbs to a particular colour
 // Pass in 16-bit numbers for each param - they will be byte shuffled as appropriate
-Gateway.prototype.lightsColour = function(hue, sat, lum, whitecol, timing) {
+Gateway.prototype.lightsColour = function(hue, sat, lum, whitecol, timing, /* optional */bulb) {
 	var message = new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x9e, 0xd4, 0xff, 0xff, 0x8f, 0x02, 0xac, 0x0d, 0x13, 0x05, 0x00, 0x00]);
 	//                                                      ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^
 	//                                                         hue      saturation  luminance  white colour   timing
@@ -215,7 +225,7 @@ Gateway.prototype.lightsColour = function(hue, sat, lum, whitecol, timing) {
 	message[13] = (timing & 0x00ff);
 	message[14] = (timing & 0xff00) >> 8;
 
-	this.sendToAll(message);
+	this.sendToOneOrAll(message, bulb);
 };
 
 module.exports = {
