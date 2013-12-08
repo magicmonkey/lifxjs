@@ -44,7 +44,7 @@ yet dug in to these; my assumption is that they are general announcements to
 the rest of the network in case there are multiple apps running which want to
 control the bulbs.
 
-### Packet type 0x02
+### Packet type 0x02 - Discovery request
 
 This is the discovery packet, and is sent by the apps via UDP to the network
 broadcast address (either the LAN broadcast address or 255.255.255.255) on UDP
@@ -57,7 +57,7 @@ zeroes because it does not yet know about the gateway bulb.
 Will hopefully cause a packet type 0x03 to be sent back; the apps should treat
 the originator of this response as the gateway bulb for further communication.
 
-### Packet type 0x03
+### Packet type 0x03 - Discovery response
 
 This is the response to the discovery packet, and is sent by the gateway bulb
 via UDP to port 56700 to the network broadcast address.
@@ -78,7 +78,7 @@ All commands are sent down this stream.
 
 The commands to change the colour are sent with packet type 0x66.
 
-### Packet type 0x66
+### Packet type 0x66 - Set bulb state request
 
 These packets are used by the apps to send a target state to the bulbs; the
 bulbs then execute their own fade towards this state.
@@ -96,7 +96,7 @@ bulbs then execute their own fade towards this state.
  * Bytes 45 - 46: These say how long the fade should take.
  * Bytes 47 - 48: Unknown, but always zeroes
 
-### Packet type 0x65
+### Packet type 0x65 - Status request
 
 This packet prompts the gateway bulb to send a status message for each bulb.
 
@@ -105,7 +105,7 @@ This packet prompts the gateway bulb to send a status message for each bulb.
 
 Will generally be followed by one or more 0x6b packets in response.
 
-### Packet type 0x15
+### Packet type 0x15 - On / off request
 
 This packet type turns the bulbs on and off.
 
@@ -132,7 +132,7 @@ The packet types (byte 33) which I've seen so far:
  * 0x16 seems to be an on/off indicator
  * 0x6b seems to be a complete status indicator
 
-### Packet type 0x6b
+### Packet type 0x6b - Status response
 
 This is sent by the bulbs to the apps to indicate the current state of the
 bulbs.  If mid-fade, then this packet will show a snapshot of where the
@@ -149,7 +149,7 @@ bulbs are at the present time.
  * Bytes 46 - 47:  On/off - 0xffff means on, and 0x0000 means off.
  * Bytes 48 - end: The name of the bulb as set by the iPhone app.
 
-### Packet type 0x16
+### Packet type 0x16 - On / off response
 
 This is sent by the bulbs to the apps to say whether the bulbs are on or off.
 It is generally sent as a result of an on/off command from the apps.
