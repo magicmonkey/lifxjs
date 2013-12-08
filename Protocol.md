@@ -12,18 +12,17 @@ It is a work in progress.
 The network protocol uses UDP and TCP in various places, but there seems to be
 a common packet format used inside both layers.
 
- * Byte  0:        The first byte is the packet length
- * Bytes 1 - 2:    The next 2 bytes This starts with the length of the packet, and
-                   then (I think) has the type of packet.
- * Byte  3:        Appears to indicate direction of data; 0x34 = app to bulb,
-                   0x54 = bulb to app
- * Bytes 4 - 7:    These always seem to be zero (could be padding on the previous
-                   or subsequent fields)
- * Bytes 8 - 15:   These look like an address of some kind (maybe the destination
-                   address?).  It is sometimes all zeroes, which could be a kind
-                   of "broadcast" or something like that?
- * Bytes 16 - 23:  These look like an address of some kind (maybe the source
-                   address?).
+ * Byte  0:        The first byte is the packet length.
+ * Bytes 1 - 2:    The next 2 bytes are always zero; they could be the packet
+                   length for longer packets (ie >255 bytes).
+ * Byte  3:        Appears to indicate direction of data; 0x14 = app to one
+                   bulb, 0x34 = app to all bulbs, 0x54 = bulb to app
+ * Bytes 4 - 7:    These always seem to be zero (could be padding on the
+                   previous or subsequent fields)
+ * Bytes 8 - 15:   The address of the target bulb (if byte 3 is 0x14), or all
+                   zeroes if the target is all bulbs (ie byte 3 is 0x34).
+ * Bytes 16 - 23:  These look like the address of the gateway bulb, ie the one
+                   which is talking to the wifi network and the iPhone app.
  * Bytes 24 - 31:  Always zeroes.
  * Byte  32:       Seem to be the packet type.
  * Bytes 33 - end: Depends on the packet type.
