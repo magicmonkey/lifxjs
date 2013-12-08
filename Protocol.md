@@ -28,6 +28,10 @@ a common packet format used inside both layers.
  * Byte  32:       Seem to be the packet type.
  * Bytes 33 - end: Depends on the packet type.
 
+In general, a 16 bit number looks to be least-significant byte first, then
+most-significant-byte, for example the decimal number 2000 (0x7d0) would be
+sent as the bytes 0xd0 0x07.
+
 ## Discovery
 
 The apps start by sending UDP "discovery" packets to the network broadcast
@@ -45,6 +49,23 @@ control the bulbs.
 
 After finding a controller bulb, open a TCP connection to it on port 56700.
 All commands are sent down this stream.
+
+The commands to change the colour are sent with packet type 0x66.
+
+### Packet type 0x66
+
+ * Byte  32:      0x66
+ * Bytes 33 - 36: Always zeroes.
+ * Bytes 37 - 38: These are the "hue" (ie the colour), and are the only bytes
+                  which change when rotating the colour wheel in the iPhone
+                  app.  It wraps around at 0xff 0xff back to 0x00 0x00 which is
+                  a primary red colour.
+ * Bytes 39 - 40: Always 0xff 0xff (maybe saturation? ie the "amount" or depth
+                  of the colour).
+ * Bytes 41 - 42: These are the "luminance" (ie the brightness)
+ * Bytes 43 - 44: Unknown, but these seem to always be 0xac 0x0d
+ * Bytes 45 - 46: Unknown, but these seem to be 0x90 0x01 or 0x13 0x05
+ * Bytes 47 - 48: Unknown, but always zeroes
 
 ## Feedback messages
 
