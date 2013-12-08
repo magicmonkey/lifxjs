@@ -63,6 +63,16 @@ async.series([
 					bulb.brightWhite();
 					break;
 
+				case 0x36: // 6
+					console.log("Test 1");
+					bulb.test1();
+					break;
+
+				case 0x37: // 7
+					console.log("Test 2");
+					bulb.test2();
+					break;
+
 				case 0x61: // a
 					console.log("Requesting info...");
 					bulb.getInfo();

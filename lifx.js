@@ -17,10 +17,11 @@ module.exports = {
 		UDPClient.on("message", function (msg, rinfo) {
 
 			console.log(" U- " + msg.toString("hex"));
-			if (msg.length > 4 && msg[32] == 0x03) {
+			var gwBulb = msg.slice(16, 24);
+			if (msg.length > 4 && msg[3] == 0x54 && msg[32] == 0x03) {
 				if (!found) {
 					found = true;
-					cb(null, {address:rinfo.address, port:rinfo.port, family:rinfo.family} );
+					cb(null, {address:rinfo.address, port:rinfo.port, family:rinfo.family, gwBulb:gwBulb} );
 				}
 			}
 		});
@@ -65,13 +66,15 @@ module.exports = {
 
 function bulb(addr) {
 
-	this.address = null;
-	this.port = null;
-	var client = null;
+	this.address = null; // IP address of the gateway bulb
+	this.port    = null; // IP port of the gateway bulb
+	this.gwBulb  = null; // LIFX address of the gateway bulb
+	var client   = null;
 
 	if (typeof addr == 'object' && typeof addr.address == 'string' && typeof addr.port == 'number') {
 		this.address = addr.address;
 		this.port = addr.port;
+		this.gwBulb = addr.gwBulb;
 	}
 
 	function connect() {
@@ -84,29 +87,6 @@ function bulb(addr) {
 
 	client.on('data', function(data) {
 		console.log(" T- " + data.toString("hex"));
-		//
-		// 5800005400000000d073d500239d0000d073d500239d000000000000000000006b0000009ed400008396f00a000000004b6576696e2773207369646500000000000000000000000000000000000000000000000000000000 // Bulb status
-		// 5800005400000000d073d5001ba90000d073d500239d000000000000000000006b0000009ed400008396f00a000000004c6f726e612773207369646500000000000000000000000000000000000000000000000000000000
-		// 5800005400000000d073d500239d0000d073d500239d000000000000000000006b00000015ccffff8f02ac0d0000ffff4b6576696e2773207369646500000000000000000000000000000000000000000000000000000000
-		// 2600005400000000d073d5001ba90000d073d500239d00000000000000000000160000000000 // Lights off
-		// 2600005400000000d073d500239d0000d073d500239d0000000000000000000016000000ffff // Lights on
-		//
-		// Different colours, same brightness:
-		// 5800005400000000d073d5001ba90000d073d500239d000000000000000000006b0000008888ffffe72bac0d0000ffff4c6f726e612773207369646500000000000000000000000000000000000000000000000000000000
-		// 5800005400000000d073d5001ba90000d073d500239d000000000000000000006b000000717cffffe72bac0d0000ffff4c6f726e612773207369646500000000000000000000000000000000000000000000000000000000
-		// 5800005400000000d073d5001ba90000d073d500239d000000000000000000006b000000606bffffe72bac0d0000ffff4c6f726e612773207369646500000000000000000000000000000000000000000000000000000000
-		// 5800005400000000d073d5001ba90000d073d500239d000000000000000000006b000000933effffe72bac0d0000ffff4c6f726e612773207369646500000000000000000000000000000000000000000000000000000000
-		// 5800005400000000d073d500239d0000d073d500239d000000000000000000006b000000e298ffffe72bac0d0000ffff4b6576696e2773207369646500000000000000000000000000000000000000000000000000000000
-		//
-		// Bulbs are off:
-		// 5800005400000000d073d5001ba90000d073d500239d000000000000000000006b000000e298ffffe72bac0d000000004c6f726e612773207369646500000000000000000000000000000000000000000000000000000000
-		//
-		// Dim red:
-		// 5800005400000000d073d5001ba90000d073d500239d000000000000000000006b0000009ed4ffff8f02ac0d0000ffff4c6f726e612773207369646500000000000000000000000000000000000000000000000000000000
-		//
-		// Dim blue:
-		// 5800005400000000d073d5001ba90000d073d500239d000000000000000000006b0000005495ffff8f02ac0d0000ffff4c6f726e612773207369646500000000000000000000000000000000000000000000000000000000
-		//
 		
 		switch (data[32]) {
 
@@ -130,7 +110,9 @@ function bulb(addr) {
 
 	var self = this;
 
-	var standardPrefix = new Buffer([0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xd0, 0x73, 0xd5, 0x00, 0x23, 0x9d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+	var standardPrefix = new Buffer([0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+	// Splice in the address of our discovered gateway bulb to replace these bytes --------------------------------------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	this.gwBulb.copy(standardPrefix, 15);
 
 	this.sendRawPacket = function(message) {
 		var bLen = new Buffer([message.length + standardPrefix.length + 1]);
@@ -143,6 +125,18 @@ function bulb(addr) {
 		client.write(sendBuf);
 	};
 
+	this.test1 = function() {
+		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfe, 0xff, 0xff, 0x02, 0x02, 0xac, 0x0d, 0x00, 0x00, 0x00, 0x00]));
+		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^              ^^^^^^^^^^
+		//                                                              hue      saturation  luminance                 timing
+	};
+
+	this.test2 = function() {
+		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfe, 0x00, 0x3a, 0x02, 0x02, 0xac, 0x0d, 0x00, 0x00, 0x00, 0x00]));
+		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^              ^^^^^^^^^^
+		//                                                              hue      saturation  luminance                 timing
+	};
+
 	this.lightsOn = function() {
 		self.sendRawPacket(new Buffer([0x15, 0x00, 0x00, 0x00, 0x01, 0x00]));
 	};
@@ -153,15 +147,20 @@ function bulb(addr) {
 
 	this.red = function() {
 		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x9e, 0xd4, 0xff, 0xff, 0x8f, 0x02, 0xac, 0x0d, 0x13, 0x05, 0x00, 0x00]));
+		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^              ^^^^^^^^^^
+		//                                                              hue      saturation  luminance                 timing
 	};
 
 	this.purple = function() {
 		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x15, 0xcc, 0xff, 0xff, 0x8f, 0x02, 0xac, 0x0d, 0x13, 0x05, 0x00, 0x00]));
-		//                                                           ^^^^^^^^^^ colours      ^^^^^^^^^^ brightness
+		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^              ^^^^^^^^^^
+		//                                                              hue      saturation  luminance                 timing
 	};
 
 	this.brightWhite = function() {
 		self.sendRawPacket(new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x83, 0x96, 0xf0, 0x0a, 0x90, 0x01, 0x00, 0x00]));
+		//                                                           ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^              ^^^^^^^^^^
+		//                                                              hue      saturation  luminance                 timing
 	};
 
 	this.getInfo = function() {
@@ -174,3 +173,4 @@ function bulb(addr) {
 	};
 
 }
+
