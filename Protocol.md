@@ -92,9 +92,14 @@ bulbs then execute their own fade towards this state.
  * Bytes 39 - 40: Always 0xff 0xff (maybe saturation? ie the "amount" or depth
                   of the colour).
  * Bytes 41 - 42: These are the "luminance" (ie the brightness)
- * Bytes 43 - 44: Unknown, but these seem to always be 0xac 0x0d
+ * Bytes 43 - 44: These are hue of the white light, basically the colour
+                  temperature.  It's what is changed by the "whites" wheel in
+                  the iPhone app.
  * Bytes 45 - 46: These say how long the fade should take.
  * Bytes 47 - 48: Unknown, but always zeroes
+
+Note that for the "whites", the app always sets hue and saturation (bytes 37,
+38, 39, and 40) to 0x00.
 
 ### Packet type 0x65 - Status request
 
@@ -142,9 +147,9 @@ bulbs are at the present time.
  * Bytes 33 - 35:  Always zeroes.
  * Bytes 36 - 37:  The "hue" (ie the colour).  It wraps around at 0xff 0xff back
                    to 0x00 0x00 which is a primary red colour.
- * Bytes 38 - 39:  Always 0xff 0xff.
+ * Bytes 38 - 39:  Always 0xff 0xff (saturation?).
  * Bytes 40 - 41:  The "luminance" (ie the brightness).
- * Bytes 42 - 43:  Unknown, but these seem to always be 0xac 0x0d.
+ * Bytes 42 - 43:  The colour temperature (ie the "white colour")
  * Bytes 44 - 45:  Unknown, but these seem to be zeroes.
  * Bytes 46 - 47:  On/off - 0xffff means on, and 0x0000 means off.
  * Bytes 48 - end: The name of the bulb as set by the iPhone app.
@@ -161,5 +166,4 @@ It is generally sent as a result of an on/off command from the apps.
 
 
 _More to come_
-
 
