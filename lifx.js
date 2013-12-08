@@ -77,8 +77,9 @@ function bulb(addr) {
 		this.gwBulb = addr.gwBulb;
 	}
 
+	var self=this;
 	function connect() {
-		client = net.connect(56700, '10.1.0.80', function() { //'connect' listener
+		client = net.connect(self.port, self.address, function() { //'connect' listener
 			//console.log('client connected');
 		});
 	}
