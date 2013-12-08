@@ -67,6 +67,9 @@ The commands to change the colour are sent with packet type 0x66.
  * Bytes 45 - 46: Unknown, but these seem to be 0x90 0x01 or 0x13 0x05
  * Bytes 47 - 48: Unknown, but always zeroes
 
+I would guess that some of the unknown bytes (maybe 45,46?) are to do with how
+fast the bulbs fade from their current state to the target state.
+
 ## Feedback messages
 
 The controller bulb appears to send data to the network as UDP packets, but it
