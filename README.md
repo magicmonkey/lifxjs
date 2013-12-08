@@ -6,7 +6,10 @@ incorrect or inaccurate, although it seems to work for me.  You have been
 warned.
 
 This is based on my setup of 2 bulbs in a single group.  That may or may not
-affect the network protocol.
+affect the network protocol.  Also, I've not looked at how the bulbs are
+initially setup to hop onto your wireless network; I configured mine with the
+iPhone app, and this library is (currently) for manipulating the bulbs once
+they are already attached to your network.
 
 Ideally, I'll end up with a nice little NodeJS library which can be used to
 build apps with.
