@@ -44,6 +44,33 @@ yet dug in to these; my assumption is that they are general announcements to
 the rest of the network in case there are multiple apps running which want to
 control the bulbs.
 
+### Packet type 0x02
+
+This is the discovery packet, and is sent by the apps via UDP to the network
+broadcast address (either the LAN broadcast address or 255.255.255.255) on UDP
+port 56700.  It has all of the address fields (bytes 8-15 and 16-23) set to
+zeroes because it does not yet know about the gateway bulb.
+
+ * Byte  32:      0x02
+ * Bytes 33 - 35: Always zeroes.
+
+Will hopefully cause a packet type 0x03 to be sent back; the apps should treat
+the originator of this response as the gateway bulb for further communication.
+
+### Packet type 0x03
+
+This is the response to the discovery packet, and is sent by the gateway bulb
+via UDP to port 56700 to the network broadcast address.
+
+ * Byte  32:      0x02
+ * Bytes 33 - 35: Always zeroes.
+ * Byte  36:      Unknown, either 0x01 or 0x02 (presumably because I have two
+                  bulbs)
+ * Bytes 37 - 40: Unknown, always 0x7c 0xdd 0x00 0x00
+
+After receiving this packet, I open a TCP connection to the originator on TCP
+port 56700 for subsequent communication.
+
 ## Control
 
 After finding a controller bulb, open a TCP connection to it on port 56700.
