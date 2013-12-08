@@ -1,5 +1,4 @@
 var lifx = require('./lifx');
-var async = require('async');
 var util = require('util');
 
 var gw = null;
@@ -46,12 +45,12 @@ stdin.on('data', function (key) {
 
 		case 0x33: // 3
 			console.log("Dim red");
-			gw.lightsColour(0xd49e, 0xffff, 0x028f, 0x0dac, 0x0513);
+			gw.lightsColour(0xd49e, 0xffff, 0x1000, 0x0dac, 500);
 			break;
 
 		case 0x34: // 4
 			console.log("Dim purple");
-			gw.lightsColour(0xcc15, 0xffff, 0x028f, 0x0dac, 0x0513);
+			gw.lightsColour(0xcc15, 0xffff, 0x1000, 0x0dac, 500);
 			break;
 
 		case 0x35: // 5

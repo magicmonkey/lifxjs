@@ -1,5 +1,4 @@
 var lifx = require('./lifx');
-var async = require('async');
 var util = require('util');
 
 var gw = null;
