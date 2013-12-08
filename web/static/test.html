@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+		<script type="text/javascript" src="/static/spectrum/spectrum.js"></script>
+		<link rel='stylesheet' href='/static/spectrum/spectrum.css' />
+	</head>
+	<body>
+		<div id="bulb1"></div>
+		<script type="text/javascript">
+			$("#bulb1").spectrum({
+				flat: true,
+				showInput: true
+			});
+			$("#bulb1").on('change', function() {
+				var c = $("#bulb1").spectrum("get");
+				$.ajax('/set/bulb1', {data:{"bulb1":c.toHsl()}});
+				c.toHsl();
+			});
+		</script>
+	</body>
+</html>
