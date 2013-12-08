@@ -8,6 +8,10 @@ lifx.Gateway.discoverAndInit(function(err, _gw) {
 		console.log("Err " + err);
 	} else {
 		gw = _gw;
+		gw.on('bulb', function(b) {
+			console.log('New bulb found: ' + b.name);
+		});
+
 	}
 });
 
@@ -45,7 +49,7 @@ stdin.on('data', function (key) {
 
 		case 0x33: // 3
 			console.log("Dim red");
-			gw.lightsColour(0xd49e, 0xffff, 0x1000, 0x0dac, 500);
+			gw.lightsColour(0x0000, 0xffff, 0x0800, 0x0dac, 500);
 			break;
 
 		case 0x34: // 4

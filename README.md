@@ -52,6 +52,9 @@ lifx.Gateway.discoverAndInit(function(err, gw) {
 });
 ```
 
+The gateway object is an EventEmitter, and emits a "bulb" event whenever a new
+bulb is found.
+
 Once you have the gateway object, you can use it to send commands to all of the
 bulbs in the mesh network:
 

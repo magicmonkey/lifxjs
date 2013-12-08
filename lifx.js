@@ -1,6 +1,7 @@
 var dgram = require('dgram');
 var net = require('net');
 var util = require('util');
+var events = require('events');
 
 var port = 56700;
 var found = false;
@@ -20,7 +21,12 @@ function Gateway(addr) {
 	this.ipAddress = {ip:addr.address, port:addr.port, family:addr.family};
 	this.lifxAddress = addr.gwBulb;
 	this.tcpClient = null;
+
+	events.EventEmitter.call(this);
 }
+
+// Make the Gateway into an event emitter
+Gateway.prototype.__proto__ = events.EventEmitter.prototype;
 
 Gateway.prototype.debug = function(d) {
 	debug = d;
@@ -39,8 +45,10 @@ Gateway.prototype.addDiscoveredBulb = function(lifxAddress, bulbName) {
 	}
 	if (!gotBulb) {
 		// It's a new bulb
-		console.log("*** New bulb found (" + bulbName + ") ***");
-		this.bulbs.push(new Bulb(lifxAddress, bulbName.toString('ascii').replace(/\0/g, '')));
+		if (debug) console.log("*** New bulb found (" + bulbName + ") ***");
+		var newBulb = new Bulb(lifxAddress, bulbName.toString('ascii').replace(/\0/g, ''));
+		this.bulbs.push(newBulb);
+		this.emit('bulb', newBulb);
 	}
 };
 
