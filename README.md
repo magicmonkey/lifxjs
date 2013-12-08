@@ -62,6 +62,16 @@ gw.lightsColour(hue,    saturation, luminance, whiteColour, fadeTime);
 gw.lightsColour(0xd49e, 0xffff,     0x028f,    0x0dac,      0x0513);
 ```
 
+or to target an individual bulb, pass an optional parameter:
+
+```Javascript
+var bulb = gw.bulbs[0];
+gw.lightsOn(bulb);
+gw.lightsOff(bulb);
+gw.lightsColour(hue,    saturation, luminance, whiteColour, fadeTime, bulb);
+gw.lightsColour(0xd49e, 0xffff,     0x028f,    0x0dac,      0x0513,   bulb);
+```
+
 The params are always 16-bit numbers, which get their bytes shuffled around
 before being sent over the network (see the [protocol](Protocol.md) doc for the
 underlying details).
