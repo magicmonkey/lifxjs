@@ -69,6 +69,15 @@ bulbs then execute their own fade towards this state.
  * Bytes 45 - 46: These say how long the fade should take.
  * Bytes 47 - 48: Unknown, but always zeroes
 
+### Packet type 0x65
+
+This packet prompts the gateway bulb to send a status message for each bulb.
+
+ * Byte  32:      0x65
+ * Bytes 33 - 35: Always zeroes.
+
+Will generally be followed by one or more 0x6b packets in response.
+
 ### Packet type 0x15
 
 This packet type turns the bulbs on and off.
