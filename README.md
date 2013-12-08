@@ -20,6 +20,8 @@ There are 2 files:
 
   * lifx.js which is the actual library
   * cli.js which is an example CLI app using the library
+  * cli2.js which lets you cycle through individual parameters to get a feel
+    for what they mean
 
 My observations of the network protocol are documented in [this
 doc](Protocol.md).  Hopefully LIFXLabs will release an official spec for the
