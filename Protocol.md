@@ -1,11 +1,11 @@
-# LIFX network protocol
+# Observed LIFX network protocol
 
 This is based purely on observations from using tcpdump and Wireshark (which are
 both excellent tools) whilst using the iPhone app.  I have 2 bulbs, and
 (currently) have no idea what most of the bytes in the network protocol mean.
 However, the hope is that documenting what I find here will help in some way.
 
-It is a work in progress.
+It is a work in progress, and not in any way affiliated or related to LIFXlabs.
 
 ## Common elements
 
@@ -112,6 +112,7 @@ bulbs are at the present time.
  * Bytes 44 - 45:  Unknown, but these seem to be zeroes.
  * Bytes 46 - 47:  On/off - 0xffff means on, and 0x0000 means off.
  * Bytes 48 - end: The name of the bulb as set by the iPhone app.
+
 
 _More to come_
 
