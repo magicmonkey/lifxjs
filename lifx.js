@@ -7,10 +7,9 @@ var found = false;
 
 var debug = false;
 
-// This represents each individual bulb, and the operations on that bulb
-function Bulb(_lifxAddress, _gw, _name) {
+// This represents each individual bulb
+function Bulb(_lifxAddress, _name) {
 	this.lifxAddress = _lifxAddress;
-	this.gw          = _gw;
 	this.name        = _name;
 }
 
@@ -41,7 +40,7 @@ Gateway.prototype.addDiscoveredBulb = function(lifxAddress, bulbName) {
 	if (!gotBulb) {
 		// It's a new bulb
 		console.log("*** New bulb found (" + bulbName + ") ***");
-		this.bulbs.push(new Bulb(lifxAddress, this, bulbName.toString('ascii').replace(/\0/g, '')));
+		this.bulbs.push(new Bulb(lifxAddress, bulbName.toString('ascii').replace(/\0/g, '')));
 	}
 };
 
@@ -82,19 +81,8 @@ Gateway.prototype.findBulbs = function(cb) {
 	this.sendToAll(new Buffer([0x65, 0x00, 0x00, 0x00]));
 };
 
-// Send a raw command to an individual bulb
-Gateway.prototype.sendToOne = function(message, bulb) {
-	var targetAddr;
-	if (Buffer.isBuffer(bulb)) {
-		targetAddr = bulb;
-	} else {
-		if (typeof bulb.lifxAddress == 'undefined') {
-			// No idea what we've been passed as a bulb.  Erm.
-			throw new Exception("Unknown thing been passed instead of a bulb");
-		}
-		targetAddr = bulb.lifxAddress;
-	}
-
+// Send a raw command - targetAddr should be a buffer containing an 8-byte address.  Use zeroes to send to all bulbs.
+Gateway.prototype.send = function(message, targetAddr) {
 	var standardPrefix = new Buffer([0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 	// Splice in the address of our discovered gateway bulb to replace these bytes --------------------------------------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	// Splice in the address of this bulb to replace these bytes --------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -109,23 +97,28 @@ Gateway.prototype.sendToOne = function(message, bulb) {
 	]);
 	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
 	this.tcpClient.write(sendBuf);
+};
 
+// Send a raw command to an individual bulb
+Gateway.prototype.sendToOne = function(message, bulb) {
+	var targetAddr;
+	if (Buffer.isBuffer(bulb)) {
+		targetAddr = bulb;
+	} else {
+		if (typeof bulb.lifxAddress == 'undefined') {
+			// No idea what we've been passed as a bulb.  Erm.
+			throw new Exception("Unknown thing been passed instead of a bulb");
+		}
+		targetAddr = bulb.lifxAddress;
+	}
+	this.send(message, targetAddr);
 };
 
 // Send a raw command to all bulbs attached to this gateway
 Gateway.prototype.sendToAll = function(message) {
-	var standardPrefix = new Buffer([0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-	// Splice in the address of our discovered gateway bulb to replace these bytes --------------------------------------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	this.lifxAddress.copy(standardPrefix, 15);
-
-	var bLen = new Buffer([message.length + standardPrefix.length + 1]);
-	var sendBuf = Buffer.concat([
-		bLen,
-		standardPrefix,
-		message
-	]);
-	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
-	this.tcpClient.write(sendBuf);
+	var targetAddr = new Buffer(8);
+	targetAddr.fill(0);
+	this.send(message, targetAddr);
 };
 
 // Close the connection to this gateway
