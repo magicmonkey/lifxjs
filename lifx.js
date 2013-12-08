@@ -151,7 +151,6 @@ function bulb(addr) {
 		message[13] = (timing & 0x00ff);
 		message[14] = (timing & 0xff00) >> 8;
 
-		console.log(util.inspect(message));
 		self.sendRawPacket(message);
 		
 	};
