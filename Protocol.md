@@ -149,7 +149,8 @@ bulbs are at the present time.
  * Bytes 33 - 35:  Always zeroes.
  * Bytes 36 - 37:  The "hue" (ie the colour).  It wraps around at 0xff 0xff back
                    to 0x00 0x00 which is a primary red colour.
- * Bytes 38 - 39:  Always 0xff 0xff (saturation?).
+ * Bytes 38 - 39:  The "saturation" (generally 0x00 for whites, ramping to
+ *                 0xffff for a deep colour.
  * Bytes 40 - 41:  The "luminance" (ie the brightness).
  * Bytes 42 - 43:  The colour temperature (ie the "white colour")
  * Bytes 44 - 45:  Unknown, but these seem to be zeroes.
