@@ -2,6 +2,7 @@ var dgram = require('dgram');
 var net = require('net');
 var util = require('util');
 var events = require('events');
+var clone = require('clone');
 
 var port = 56700;
 var found = false;
@@ -32,23 +33,30 @@ Gateway.prototype.debug = function(d) {
 	debug = d;
 };
 
+Gateway.prototype.getBulbByLifxAddress = function(lifxAddress) {
+	var addrToSearch = lifxAddress;
+	if (typeof lifxAddress != 'string') {
+		addrToSearch = lifxAddress.toString('hex');
+	}
+	for (var i in this.bulbs) {
+		if (this.bulbs[i].lifxAddress.toString('hex') == addrToSearch) {
+			return this.bulbs[i];
+		}
+	}
+	return false;
+};
+
 Gateway.prototype.addDiscoveredBulb = function(lifxAddress, bulbName) {
 	var strAddress = lifxAddress.toString('hex');
 
 	// See if we've already got the bulb
-	var gotBulb = false;
-	for (var i in this.bulbs) {
-		if (this.bulbs[i].lifxAddress.toString('hex') == lifxAddress.toString('hex')) {
-			gotBulb = true;
-			break;
-		}
-	}
+	var gotBulb = this.getBulbByLifxAddress(lifxAddress);
 	if (!gotBulb) {
 		// It's a new bulb
 		if (debug) console.log("*** New bulb found (" + bulbName + ") ***");
 		var newBulb = new Bulb(lifxAddress, bulbName.toString('ascii').replace(/\0/g, ''));
 		this.bulbs.push(newBulb);
-		this.emit('bulb', newBulb);
+		this.emit('bulb', clone(newBulb));
 	}
 };
 
@@ -61,19 +69,31 @@ Gateway.prototype.connect = function(cb) {
 	this.tcpClient.on('data', function(data) {
 		if (debug) console.log(" T- " + data.toString("hex"));
 		
+		var lifxAddress = data.slice(8,16);
+		var bulb = self.getBulbByLifxAddress(lifxAddress);
+
 		switch (data[32]) {
 
 			case 0x6b:
-				var lifxAddress = data.slice(8,16);
 				var bulbName = data.slice(48);
 				if (debug) console.log(" * Found a bulb: " + bulbName + " (address " + util.inspect(lifxAddress) + ")");
 				self.addDiscoveredBulb(lifxAddress, bulbName);
+				bulb = self.getBulbByLifxAddress(lifxAddress);
+				var hue = (data[37] << 8) + data[36];
+				var sat = (data[39] << 8) + data[38];
+				var lum = (data[41] << 8) + data[40];
+				var whi = (data[43] << 8) + data[42];
+				var onoff = (data[46] > 0);
+				var state = {hue:hue, saturation:sat, luminance:lum, colourTemp:whi, on:onoff, bulb:bulb};
+				self.emit('bulbstate', clone(state));
 				break;
 
 			case 0x16:
 				if (data[37] == 0xff) {
+					self.emit('bulbonoff', {bulb:clone(bulb),on:true});
 					if (debug) console.log(" * Light is on");
 				} else {
+					self.emit('bulbonoff', {bulb:clone(bulb),on:false});
 					if (debug) console.log(" * Light is off");
 				}
 				break;
@@ -112,10 +132,16 @@ Gateway.prototype.sendToOne = function(message, bulb) {
 	var targetAddr;
 	if (Buffer.isBuffer(bulb)) {
 		targetAddr = bulb;
+	} else if (typeof bulb == 'string') {
+		bulb = this.getBulbByLifxAddress(bulb);
+		if (!bulb) {
+			throw "Unknown thing been passed instead of a bulb: " + util.inspect(bulb);
+		}
+		targetAddr = bulb.lifxAddress;
 	} else {
 		if (typeof bulb.lifxAddress == 'undefined') {
 			// No idea what we've been passed as a bulb.  Erm.
-			throw new Exception("Unknown thing been passed instead of a bulb");
+			throw "Unknown thing been passed instead of a bulb: " + util.inspect(bulb);
 		}
 		targetAddr = bulb.lifxAddress;
 	}

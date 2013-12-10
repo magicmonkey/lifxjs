@@ -1,0 +1,14 @@
+{
+  "name": "lifxjs",
+  "version": "0.0.1",
+  "author": "Kevin Bowman <npm@magicmonkey.org>",
+  "description": "a library to control LIFX wifi lightbulbs",
+  "main": "./lifx.js",
+  "keywords": [
+    "lifx"
+  ],
+  "dependencies" : {
+    "clone" : "*"
+  },
+  "license": "MIT"
+}
