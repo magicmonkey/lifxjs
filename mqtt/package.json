@@ -1,0 +1,20 @@
+{
+  "name": "lifx-mqtt",
+  "version": "0.0.1",
+  "author": "Kevin Bowman <npm@magicmonkey.org>",
+  "description": "a bridge between LIFX wifi lightbulbs and MQTT",
+  "bin": {
+    "lifxmqtt": "./bin/lifxmqtt"
+  },
+  "scripts": {
+    "start": "node ./bin/lifxmqtt"
+  },
+  "keywords": [
+    "lifx",
+    "mqtt"
+  ],
+  "dependencies" : {
+    "mqtt"  : "0.3.x"
+  },
+  "license": "MIT"
+}
