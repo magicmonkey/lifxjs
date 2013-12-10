@@ -14,9 +14,17 @@ they are already attached to your network.
 Ideally, I'll end up with a nice little NodeJS library which can be used to
 build apps with.
 
-_Bonus: I've made a (very) crude web interface in the "web" branch and a
-        bridge to MQTT in the "mqtt" branch, which will get cleaned-up and
-        merged at some point_
+_Bonus: There's a demo web app in the "web" dir which just displays a colour
+        picker and sets the bulbs to the chosen colour, and a demo mqtt bridge
+        in the "mqtt" dir which bridges between an MQTT broker and the bulbs_
+
+## Install
+
+Not yet available through NPM, although you need to run "npm install" in this
+dir to get the "clone" dependency.
+
+If you want to run the web or mqtt app, you also need to run "npm install" in
+the respective dir to get their dependencies.
 
 ## Files
 
