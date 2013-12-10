@@ -20,7 +20,7 @@ _Bonus: I've made a (very) crude web interface in the "web" branch and a
 
 ## Files
 
-There are 2 files:
+There are 3 files:
 
   * lifx.js which is the actual library
   * cli.js which is an example CLI app using the library
