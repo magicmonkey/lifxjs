@@ -1,18 +1,16 @@
 # JS library for LIFX bulbs
 
-Some experimentation with trying to interpret the network protocol for [LIFX
-bulbs](http://lifx.co).  This is very much observational, so is most likely
-incorrect or inaccurate, although it seems to work for me.  You have been
-warned.
+A NodeJS client for the [LIFX bulbs](http://lifx.co) based on my observations
+of the network protocol using tcpdump and Wireshark.  This is very much
+experimental, so is most likely incorrect or inaccurate, although it seems to
+work for me.  You have been warned.  Observations are documented in
+[Protocol.md](Protocol.md).
 
 This is based on my setup of 2 bulbs in a single group.  That may or may not
 affect the network protocol.  Also, I've not looked at how the bulbs are
 initially setup to hop onto your wireless network; I configured mine with the
 iPhone app, and this library is (currently) for manipulating the bulbs once
 they are already attached to your network.
-
-Ideally, I'll end up with a nice little NodeJS library which can be used to
-build apps with.
 
 _Bonus: There's a demo web app in the "web" dir which just displays a colour
         picker and sets the bulbs to the chosen colour, and a demo mqtt bridge
