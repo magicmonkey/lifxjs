@@ -20,11 +20,11 @@ _Bonus: There's a demo web app in the "web" dir which just displays a colour
 
 ## Install
 
-Not yet available through NPM, although you need to run "npm install" in this
-dir to get the "clone" dependency.
+Not yet available through NPM, although you need to run ```npm install``` in
+this dir to get the "clone" dependency.
 
-If you want to run the web or mqtt app, you also need to run "npm install" in
-the respective dir to get their dependencies.
+If you want to run the web or mqtt app, you also need to run ```npm install```
+in the respective dir to get their dependencies.
 
 ## Files
 
