@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+		<script type="text/javascript" src="/spectrum/spectrum.js"></script>
+		<link rel='stylesheet' href='/spectrum/spectrum.css' />
+	</head>
+	<body>
+		<div id="bulb1"></div>
+		<script type="text/javascript">
+			$("#bulb1").spectrum({
+				flat: true,
+				showInput: false,
+				preferredFormat: "hsl",
+				paletteOnly: true,
+				color: "hsl(299, 0.71, 0.48)", // A lovely pink colour
+				move: function(c) {
+					$.ajax('/set/bulb1', {data:{"bulb1":c.toHsl()}});
+				}
+			});
+		</script>
+	</body>
+</html>
