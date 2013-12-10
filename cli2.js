@@ -5,12 +5,14 @@ var gw = null;
 
 var step = 100;
 var autoCommit = true;
+var timing = 0;
 
 lifx.Gateway.discoverAndInit(function(err, _gw) {
 	if (err) {
 		console.log("Err " + err);
 	} else {
 		gw = _gw;
+		//gw.debug(true);
 	}
 });
 
@@ -77,54 +79,58 @@ stdin.on('data', function (key) {
 		case 0x71: // q
 			hue = (hue + step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, 0);
+			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x61: // a
 			hue = (hue - step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, 0);
+			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x77: // w
 			sat = (sat + step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, 0);
+			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x73: // s
 			sat = (sat - step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, 0);
+			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x65: // e
 			lum = (lum + step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, 0);
+			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x64: // d
 			lum = (lum - step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, 0);
+			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x72: // r
 			whi = (whi + step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, 0);
+			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x66: // f
 			whi = (whi - step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, 0);
+			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
+			break;
+
+		case 0x67: // g
+			gw.findBulbs();
 			break;
 
 		case 0x0d: // enter
 			console.log("Sending H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			gw.lightsColour(hue, sat, lum, whi, 0);
+			gw.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x03: // ctrl-c
