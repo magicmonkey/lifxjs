@@ -22,6 +22,7 @@ function Gateway(addr) {
 	this.ipAddress = {ip:addr.address, port:addr.port, family:addr.family};
 	this.lifxAddress = addr.gwBulb;
 	this.tcpClient = null;
+	this.reconnect = true;
 
 	events.EventEmitter.call(this);
 }
@@ -64,7 +65,9 @@ Gateway.prototype.addDiscoveredBulb = function(lifxAddress, bulbName) {
 Gateway.prototype.connect = function(cb) {
 	var self = this;
 	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip, function() { //'connect' listener
-		cb();
+		if (typeof cb == 'function') {
+			cb();
+		}
 	});
 	this.tcpClient.on('data', function(data) {
 		if (debug) console.log(" T- " + data.toString("hex"));
@@ -101,6 +104,10 @@ Gateway.prototype.connect = function(cb) {
 	});
 	this.tcpClient.on('end', function() {
 		console.log('TCP client disconnected');
+		self.tcpClient.destroy();
+		if (self.reconnect) {
+			self.connect();
+		}
 	});
 }
 
@@ -157,6 +164,7 @@ Gateway.prototype.sendToAll = function(message) {
 
 // Close the connection to this gateway
 Gateway.prototype.close = function() {
+	this.reconnect = false;
 	this.tcpClient.end();
 };
 
