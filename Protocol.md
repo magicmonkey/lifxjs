@@ -68,6 +68,9 @@ via UDP to port 56700 to the network broadcast address.
                   bulbs)
  * Bytes 37 - 40: Unknown, always 0x7c 0xdd 0x00 0x00
 
+These bytes are likely to be the 8-byte address used in other packets (eg 0x6b)
+I'll check and update later.
+
 After receiving this packet, I open a TCP connection to the originator on TCP
 port 56700 for subsequent communication.
 
@@ -127,11 +130,12 @@ Will generally cause a packet 0x16 in response.
 
 This packet type changes the name of a bulb
 
- * Byte  32:     0x18
- * Bytes 33-35:  Always zeroes.
- * Byte  36-End: New name, standard ascii encoding. Max length unknown.
+ * Byte  32:       0x18
+ * Bytes 33 - 35:  Always zeroes.
+ * Byte  36 - end: New name, standard ascii encoding. Max length unknown.
 
-Generated responses of packet type 0x1b(over tcp to specific IPs), and 0x19(over upd to broadcast ip), and 0x6b
+Generated responses of packet type 0x1b (over TCP to specific IPs), and 0x19
+(over UDP to broadcast ip), and 0x6b
 
 ## Feedback messages
 
