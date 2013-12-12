@@ -30,6 +30,12 @@ class Packet {
     }
     return "\x24\x00\x00$to\x00\x00\x00\x00$target" . Packet::$gateway . "\x00\x00\x00\x00\x00\x00\x00\x00\x65\x00\x00\x00";
   }
+  public static function Name($target, $name) {
+    $target = hextobin($target);
+    $to = "\x14";
+    $name = str_pad($name, 32, "\x00");
+    return chr(36 + 32) . "\x00\x00$to\x00\x00\x00\x00$target". Packet::$gateway . "\x00\x00\x00\x00\x00\x00\x00\x00\x18\x00\x00\x00$name";
+  }
   public static function On($target = null) {
     if($target === null) {
       $target = "\x00\x00\x00\x00\x00\x00\x00\x00";
