@@ -123,6 +123,16 @@ This packet type turns the bulbs on and off.
 
 Will generally cause a packet 0x16 in response.
 
+### Packet type 0x18 - Change Name
+
+This packet type changes the name of a bulb
+
+ * Byte  32:     0x18
+ * Bytes 33-35:  Always zeroes.
+ * Byte  36-End: New name, standard ascii encoding. Max length unknown.
+
+Generated responses of packet type 0x1b(over tcp to specific IPs), and 0x19(over upd to broadcast ip), and 0x6b
+
 ## Feedback messages
 
 The controller bulb appears to send data to the network as UDP packets, but it
