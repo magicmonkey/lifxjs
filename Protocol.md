@@ -77,10 +77,41 @@ All commands are sent down this stream.
 
 The packet types (byte 32) which I've seen so far:
 
- * 0x16 sets the on/off status of a bulb
- * 0x18 changes the name of a bult
+ * 0x15 sets the on/off status of a bulb
+ * 0x18 changes the name of a bulb
  * 0x65 requests 0x6b packets for each bulb
  * 0x66 changes the color and brightness of a bulb
+
+### Packet type 0x15 - On / off request
+
+This packet type turns the bulbs on and off.
+
+ * Byte  32:      0x15
+ * Bytes 33 - 35: Always zeroes.
+ * Bytes 36:      0x01 to turn on, or 0x00 to turn off
+ * Bytes 37:      Always zero.
+
+Will generally cause a packet 0x16 in response.
+
+### Packet type 0x18 - Change Name
+
+This packet type changes the name of a bulb
+
+ * Byte  32:       0x18
+ * Bytes 33 - 35:  Always zeroes.
+ * Byte  36 - end: New name, standard ascii encoding. Max length unknown.
+
+Generated responses of packet type 0x1b (over TCP to specific IPs), and 0x19
+(over UDP to broadcast ip), and 0x6b
+
+### Packet type 0x65 - Status request
+
+This packet prompts the gateway bulb to send a status message for each bulb.
+
+ * Byte  32:      0x65
+ * Bytes 33 - 35: Always zeroes.
+
+Will generally be followed by one or more 0x6b packets in response.
 
 ### Packet type 0x66 - Set bulb state request
 
@@ -107,37 +138,6 @@ Note that for the "whites", the app always sets hue and saturation (bytes 37,
 range, such that 0-10 is very yellow, 14 is a natural white, then 15-30 fades
 to blue.  Anything beyond that seems to be very blue.
 
-### Packet type 0x65 - Status request
-
-This packet prompts the gateway bulb to send a status message for each bulb.
-
- * Byte  32:      0x65
- * Bytes 33 - 35: Always zeroes.
-
-Will generally be followed by one or more 0x6b packets in response.
-
-### Packet type 0x15 - On / off request
-
-This packet type turns the bulbs on and off.
-
- * Byte  32:      0x15
- * Bytes 33 - 35: Always zeroes.
- * Bytes 36:      0x01 to turn on, or 0x00 to turn off
- * Bytes 37:      Always zero.
-
-Will generally cause a packet 0x16 in response.
-
-### Packet type 0x18 - Change Name
-
-This packet type changes the name of a bulb
-
- * Byte  32:       0x18
- * Bytes 33 - 35:  Always zeroes.
- * Byte  36 - end: New name, standard ascii encoding. Max length unknown.
-
-Generated responses of packet type 0x1b (over TCP to specific IPs), and 0x19
-(over UDP to broadcast ip), and 0x6b
-
 ## Feedback messages
 
 The controller bulb appears to send data to the network as UDP packets, but it
@@ -152,6 +152,23 @@ The packet types (byte 32) which I've seen so far:
  * 0x16 seems to be an on/off indicator
  * 0x19 seems to be a name change indicator
  * 0x6b seems to be a complete status indicator
+
+### Packet type 0x16 - On / off response
+
+This is sent by the bulbs to the apps to say whether the bulbs are on or off.
+It is generally sent as a result of an on/off command from the apps.
+
+ * Byte  32:       0x16
+ * Bytes 33 - 35:  Always zeroes.
+ * Bytes 36 - 37:  On/off indicator; 0x0000 means the bulbs are off, and 0xffff
+                   means that the bulbs are on.
+
+### Packet type 0x19 - Name Change response
+
+This is sent by the bulbs to the apps to say when a name change has been requested.
+ * Byte  32:        0x16
+ * Bytes 33 - 35:   Always zeroes.
+ * Bytes 36 - end:  New name, standard ascii encoding. Max length unknown.
 
 ### Packet type 0x6b - Status response
 
@@ -170,23 +187,6 @@ bulbs are at the present time.
  * Bytes 44 - 45:  Unknown, but these seem to be zeroes.
  * Bytes 46 - 47:  On/off - 0xffff means on, and 0x0000 means off.
  * Bytes 48 - end: The name of the bulb as set by the iPhone app.
-
-### Packet type 0x16 - On / off response
-
-This is sent by the bulbs to the apps to say whether the bulbs are on or off.
-It is generally sent as a result of an on/off command from the apps.
-
- * Byte  32:       0x16
- * Bytes 33 - 35:  Always zeroes.
- * Bytes 36 - 37:  On/off indicator; 0x0000 means the bulbs are off, and 0xffff
-                   means that the bulbs are on.
-
-### Packet type 0x19 - Name Change response
-
-This is sent by the bulbs to the apps to say when a name change has been requested.
- * Byte  32:        0x16
- * Bytes 33 - 35:   Always zeroes.
- * Bytes 36 - end:  New name, standard ascii encoding. Max length unknown.
 
 _More to come_
 
