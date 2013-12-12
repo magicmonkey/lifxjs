@@ -64,12 +64,8 @@ via UDP to port 56700 to the network broadcast address.
 
  * Byte  32:      0x02
  * Bytes 33 - 35: Always zeroes.
- * Byte  36:      Unknown, either 0x01 or 0x02 (presumably because I have two
-                  bulbs)
+ * Byte  36:      Unknown, observed to be either 0x01 or 0x02.
  * Bytes 37 - 40: Unknown, always 0x7c 0xdd 0x00 0x00
-
-These bytes are likely to be the 8-byte address used in other packets (eg 0x6b)
-I'll check and update later.
 
 After receiving this packet, I open a TCP connection to the originator on TCP
 port 56700 for subsequent communication.
