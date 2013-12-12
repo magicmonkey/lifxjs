@@ -35,7 +35,7 @@ sent as the bytes 0xd0 0x07.
 
 The apps start by sending UDP "discovery" packets to the network broadcast
 address, port 56700.  They do this repeatedly until a bulb responds by sending
-a UDP packet back to you on port 56700 - I identify these by the 33rd byte
+a UDP packet back to you on port 56700 - I identify these by the 32nd byte
 containing 0x03.
 
 The first response which matches this is what I'm using as the "controller"
@@ -79,7 +79,12 @@ port 56700 for subsequent communication.
 After finding a controller bulb, open a TCP connection to it on port 56700.
 All commands are sent down this stream.
 
-The commands to change the colour are sent with packet type 0x66.
+The packet types (byte 32) which I've seen so far:
+
+ * 0x16 sets the on/off status of a bulb
+ * 0x18 changes the name of a bult
+ * 0x65 requests 0x6b packets for each bulb
+ * 0x66 changes the color and brightness of a bulb
 
 ### Packet type 0x66 - Set bulb state request
 
@@ -146,11 +151,10 @@ the common elements detailed above.
 If you have more than one bulb, you will get a packet for each bulb with the
 second address field changed to tell you which bulb the packet is referring to.
 
-The packet types (byte 33) which I've seen so far:
+The packet types (byte 32) which I've seen so far:
 
- * 0x03 seems to be an introduction packet, which you get when first
-   discovering a network
  * 0x16 seems to be an on/off indicator
+ * 0x19 seems to be a name change indicator
  * 0x6b seems to be a complete status indicator
 
 ### Packet type 0x6b - Status response
@@ -181,6 +185,12 @@ It is generally sent as a result of an on/off command from the apps.
  * Bytes 36 - 37:  On/off indicator; 0x0000 means the bulbs are off, and 0xffff
                    means that the bulbs are on.
 
+### Packet type 0x19 - Name Change response
+
+This is sent by the bulbs to the apps to say when a name change has been requested.
+ * Byte  32:        0x16
+ * Bytes 33 - 35:   Always zeroes.
+ * Bytes 36 - end:  New name, standard ascii encoding. Max length unknown.
 
 _More to come_
 
