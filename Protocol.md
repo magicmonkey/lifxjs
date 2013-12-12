@@ -35,8 +35,8 @@ sent as the bytes 0xd0 0x07.
 
 The apps start by sending UDP "discovery" packets to the network broadcast
 address, port 56700.  They do this repeatedly until a bulb responds by sending
-a UDP packet back to you on port 56700 - I identify these by the 32nd byte
-containing 0x03.
+a UDP packet back to you on port 56700 - I identify these by the packet type
+(ie byte 32) containing 0x03.
 
 The first response which matches this is what I'm using as the "controller"
 bulb.  The controller appears to continue sending UDP packets, but I have not
