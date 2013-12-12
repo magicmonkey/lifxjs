@@ -47,6 +47,7 @@ class LiFx {
 	  //echo "Queuing command $command]\n";
 	  $this->queueCommand(trim(str_replace("/lifx/", "/", $command)));
 	}
+	sleep(2);
 	$responses = '['.str_replace("\n", ",", file_get_contents("pendingResponse")) . ']';
 	file_put_contents("pendingResponse", "");
 	$headers = "HTTP/1.1 200 OK\r\n";
