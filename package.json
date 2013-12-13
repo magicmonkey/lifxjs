@@ -4,11 +4,27 @@
   "author": "Kevin Bowman <npm@magicmonkey.org>",
   "description": "a library to control LIFX wifi lightbulbs",
   "main": "./lifx.js",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/magicmonkey/lifxjs.git"
+  },
+  "licenses" : [
+    {
+      "type" : "MIT",
+      "url" : "https://github.com/magicmonkey/lifxjs/raw/master/LICENSE"
+    }
+  ],
+  "bugs" : {
+    "url" : "https://github.com/magicmonkey/lifxjs/issues"
+  },
   "keywords": [
-    "lifx"
+    "lifx",
+    "led",
+    "wifi",
+    "bulb",
+    "lightbulb",
   ],
   "dependencies" : {
     "clone" : "*"
-  },
-  "license": "MIT"
+  }
 }
