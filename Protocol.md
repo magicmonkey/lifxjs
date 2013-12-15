@@ -188,5 +188,10 @@ bulbs are at the present time.
  * Bytes 46 - 47:  On/off - 0xffff means on, and 0x0000 means off.
  * Bytes 48 - end: The name of the bulb as set by the iPhone app.
 
-_More to come_
+## Other observed packet types
+
+These follow the standard prefix, so the given examples are from byte 32 onwards.
+
+ * 0x1f (bulb to app) - eg 1f:00:00:00:ff:ff:ff:ff:ff:ff:ff:ff:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+ * 0x1d (app to bulb) - eg 1d:00:00:00:ff:ff:ff:ff:ff:ff:ff:ff
 
