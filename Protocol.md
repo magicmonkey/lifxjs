@@ -24,12 +24,26 @@ a common packet format used inside both layers.
  * Bytes 16 - 23:  These look like the address of the gateway bulb, ie the one
                    which is talking to the wifi network and the iPhone app.
  * Bytes 24 - 31:  Always zeroes.
- * Byte  32:       Seem to be the packet type.
+ * Byte  32:       Packet type.
  * Bytes 33 - end: Depends on the packet type.
 
 In general, a 16 bit number looks to be least-significant byte first, then
 most-significant-byte, for example the decimal number 2000 (0x7d0) would be
 sent as the bytes 0xd0 0x07.
+
+## Packet types
+
+ * 0x02 - app to bulb - discovery request
+ * 0x03 - bulb to app - discovery response
+ * 0x15 - app to bulb - on/off request
+ * 0x16 - bulb to app - on/off response
+ * 0x18 - app to bulb - change name request
+ * 0x19 - bulb to app - change name response
+ * 0x1d - app to bulb - unknown
+ * 0x1f - bulb to app - unknown
+ * 0x65 - app to bulb - status request
+ * 0x66 - app to bulb - set bulb state request
+ * 0x6b - bulb to app - status response
 
 ## Discovery
 
@@ -93,7 +107,7 @@ This packet type turns the bulbs on and off.
 
 Will generally cause a packet 0x16 in response.
 
-### Packet type 0x18 - Change Name
+### Packet type 0x18 - Change name request
 
 This packet type changes the name of a bulb
 
@@ -163,7 +177,7 @@ It is generally sent as a result of an on/off command from the apps.
  * Bytes 36 - 37:  On/off indicator; 0x0000 means the bulbs are off, and 0xffff
                    means that the bulbs are on.
 
-### Packet type 0x19 - Name Change response
+### Packet type 0x19 - Change name response
 
 This is sent by the bulbs to the apps to say when a name change has been requested.
  * Byte  32:        0x16
