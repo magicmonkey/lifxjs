@@ -19,12 +19,12 @@ a common packet format used inside both layers.
                    bulb, 0x34 = app to all bulbs, 0x54 = bulb to app
  * Bytes 4 - 7:    These always seem to be zero (could be padding on the
                    previous or subsequent fields)
- * Bytes 8 - 9:    Always zeroes.
- * Bytes 10 - 15:  The MAC address of the target bulb (if byte 3 is 0x14), or
+ * Bytes 8 - 13:   The MAC address of the target bulb (if byte 3 is 0x14), or
                    all zeroes if the target is all bulbs (ie byte 3 is 0x34).
- * Bytes 16 - 17:  Always zeroes.
- * Bytes 18 - 23:  These look like the MAC address of the gateway bulb, ie the
+ * Bytes 14 - 15:  Always zeroes.
+ * Bytes 16 - 21:  These look like the MAC address of the gateway bulb, ie the
                    one which is talking to the wifi network and the iPhone app.
+ * Bytes 22 - 23:  Always zeroes.
  * Bytes 24 - 31:  Always zeroes.
  * Byte  32:       Packet type.
  * Bytes 33 - end: Depends on the packet type.
