@@ -245,7 +245,15 @@ Lifx.prototype.close = function() {
 	});
 };
 
-Lifx.prototype.sendToOneOrAll = function(command, bulb) {
+Lifx.prototype.sendToAll = function(command) {
+	this._sendToOneOrAll(command);
+};
+
+Lifx.prototype.sendToOne = function(command, bulb) {
+	this._sendToOneOrAll(command, bulb);
+};
+
+Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 	this.gateways.forEach(function(g) {
 		if (typeof bulb == 'undefined') {
 			g.sendToAll(command);
@@ -259,12 +267,12 @@ Lifx.prototype.sendToOneOrAll = function(command, bulb) {
 
 // Turn all lights on
 Lifx.prototype.lightsOn = function(bulb) {
-	this.sendToOneOrAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x01, 0x00]), bulb);
+	this._sendToOneOrAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x01, 0x00]), bulb);
 };
 
 // Turn all lights off
 Lifx.prototype.lightsOff = function(bulb) {
-	this.sendToOneOrAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x00, 0x00]), bulb);
+	this._sendToOneOrAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x00, 0x00]), bulb);
 };
 
 // Set all bulbs to a particular colour
@@ -284,7 +292,7 @@ Lifx.prototype.lightsColour = function(hue, sat, lum, whitecol, timing, bulb) {
 	message[13] = (timing & 0x00ff);
 	message[14] = (timing & 0xff00) >> 8;
 
-	this.sendToOneOrAll(message, bulb);
+	this._sendToOneOrAll(message, bulb);
 };
 
 module.exports = {
