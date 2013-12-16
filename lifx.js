@@ -34,7 +34,7 @@ Lifx.prototype.foundGateway = function(gw) {
 		gw.connect();
 		gw.on('_packet', this._getPacketHandler());
 		gw.findBulbs();
-		this.emit("gateway", gw);
+		this.emit("gateway", clone(gw));
 	}
 };
 
