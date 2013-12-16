@@ -1,19 +1,23 @@
 var lifx = require('./lifx');
 var util = require('util');
 
-var gw = null;
-
 var step = 100;
 var autoCommit = true;
 var timing = 0;
 
-lifx.Gateway.discoverAndInit(function(err, _gw) {
-	if (err) {
-		console.log("Err " + err);
-	} else {
-		gw = _gw;
-		//gw.debug(true);
-	}
+var lx = lifx.init();
+
+lx.on('bulbstate', function(b) {
+	console.log('Bulb state: ' + util.inspect(b.name));
+});
+lx.on('bulbonoff', function(b) {
+	console.log('Bulb on/off: ' + util.inspect(b.name));
+});
+lx.on('bulb', function(b) {
+	console.log('New bulb found: ' + b.name);
+});
+lx.on('gateway', function(g) {
+	console.log('New gateway found: ' + g.ipAddress.ip);
 });
 
 console.log("Keys:");
@@ -48,12 +52,12 @@ stdin.on('data', function (key) {
 
 		case 0x31: // 1
 			console.log("Lights on");
-			gw.lightsOn();
+			lx.lightsOn();
 			break;
 
 		case 0x32: // 2
 			console.log("Lights off");
-			gw.lightsOff();
+			lx.lightsOff();
 			break;
 
 		case 0x36: // 6
@@ -68,76 +72,76 @@ stdin.on('data', function (key) {
 
 		case 0x38: // 8
 			console.log("Debug on");
-			gw.debug(false);
+			lifx.setDebug(true);
 			break;
 
 		case 0x39: // 9
 			console.log("Debug off");
-			gw.debug(false);
+			lifx.setDebug(false);
 			break;
 
 		case 0x71: // q
 			hue = (hue + step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
+			if (autoCommit) lx.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x61: // a
 			hue = (hue - step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
+			if (autoCommit) lx.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x77: // w
 			sat = (sat + step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
+			if (autoCommit) lx.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x73: // s
 			sat = (sat - step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
+			if (autoCommit) lx.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x65: // e
 			lum = (lum + step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
+			if (autoCommit) lx.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x64: // d
 			lum = (lum - step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
+			if (autoCommit) lx.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x72: // r
 			whi = (whi + step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
+			if (autoCommit) lx.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x66: // f
 			whi = (whi - step) & 0xffff;
 			console.log("H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			if (autoCommit) gw.lightsColour(hue, sat, lum, whi, timing);
+			if (autoCommit) lx.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x67: // g
-			gw.findBulbs();
+			lx.findBulbs();
 			break;
 
 		case 0x0d: // enter
 			console.log("Sending H<" + hue + "> S<" + sat + "> L<" + lum + "> W<" + whi + ">");
-			gw.lightsColour(hue, sat, lum, whi, timing);
+			lx.lightsColour(hue, sat, lum, whi, timing);
 			break;
 
 		case 0x03: // ctrl-c
 			console.log("Closing...");
-			gw.close();
+			lx.close();
 			process.stdin.pause();
-			//process.exit();
+			process.exit();
 			break;
 
 	}
