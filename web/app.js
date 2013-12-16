@@ -11,7 +11,7 @@ app.get('/set/bulb1', function(req, res, next) {
 	var sat = bulb1.s * (65536 / 0.8)
 	var lum = bulb1.l * (65536 / 1)
 	//console.log(hue, sat, lum);
-	gw.lightsColour(hue, sat, lum, 0x0dac, 0);
+	lx.lightsColour(hue, sat, lum, 0x0dac, 0);
 	res.end("OK");
 });
 
@@ -21,17 +21,9 @@ console.log('Listening on port 3000');
 
 
 var lifx = require('../lifx');
-var gw = null;
+var lx = lifx.init();
 
-lifx.Gateway.discoverAndInit(function(err, _gw) {
-	if (err) {
-		console.log("Err " + err);
-	} else {
-		gw = _gw;
-		gw.on('bulb', function(b) {
-			console.log('New bulb found: ' + b.name);
-		});
-
-	}
+lx.on('bulb', function(b) {
+	console.log('New bulb found: ' + b.name);
 });
 
