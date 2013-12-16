@@ -1,18 +1,24 @@
 var lifx = require('./lifx');
 var util = require('util');
 
-var gw = null;
+lifx.setDebug(false);
 
-lifx.Gateway.discoverAndInit(function(err, _gw) {
-	if (err) {
-		console.log("Err " + err);
-	} else {
-		gw = _gw;
-		gw.on('bulb', function(b) {
-			console.log('New bulb found: ' + b.name);
-		});
+var lx = lifx.init();
 
-	}
+lx.on('bulbstate', function(b) {
+	//console.log('Bulb state: ' + util.inspect(b));
+});
+
+lx.on('bulbonoff', function(b) {
+	//console.log('Bulb on/off: ' + util.inspect(b));
+});
+
+lx.on('bulb', function(b) {
+	//console.log('New bulb found: ' + b.name);
+});
+
+lx.on('gateway', function(g) {
+	console.log('New gateway found: ' + g.ipAddress.ip);
 });
 
 console.log("Keys:");
@@ -39,61 +45,60 @@ stdin.on('data', function (key) {
 
 		case 0x31: // 1
 			console.log("Lights on");
-			gw.lightsOn();
+			lx.lightsOn();
 			break;
 
 		case 0x32: // 2
 			console.log("Lights off");
-			gw.lightsOff();
+			lx.lightsOff();
 			break;
 
 		case 0x33: // 3
 			console.log("Dim red");
-			gw.lightsColour(0x0000, 0xffff, 0x0800, 0x0dac, 500);
+			lx.lightsColour(0x0000, 0xffff, 0x0200, 0x0dac, 500);
 			break;
 
 		case 0x34: // 4
 			console.log("Dim purple");
-			gw.lightsColour(0xcc15, 0xffff, 0x1000, 0x0dac, 500);
+			lx.lightsColour(0xcc15, 0xffff, 0x0200, 0x0dac, 500);
 			break;
 
 		case 0x35: // 5
 			console.log("Bright white");
-			gw.lightsColour(0x0000, 0x0000, 0x8000, 0x0af0, 0x0513);
+			lx.lightsColour(0x0000, 0x0000, 0x8000, 0x0af0, 0x0513);
 			break;
 
 		case 0x36: // 6
 			cycledColour = (cycledColour+100) & 0xffff; console.log("Colour value is " + cycledColour);
-			gw.lightsColour(cycledColour, 0xffff, 0x0200, 0x0000, 0x0000);
+			lx.lightsColour(cycledColour, 0xffff, 0x0200, 0x0000, 0x0000);
 			break;
 
 		case 0x37: // 7
-			cycledColour = (cycledColour+1000) & 0xffff; console.log("Colour value is " + cycledColour);
-			gw.lightsColour(cycledColour, 0xffff, 0x0200, 0x0000, 0x0000);
+			cycledColour = (cycledColour-100) & 0xffff; console.log("Colour value is " + cycledColour);
+			lx.lightsColour(cycledColour, 0xffff, 0x0200, 0x0000, 0x0000);
 			break;
 
 		case 0x38: // 8
 			console.log("Enabling debug");
-			gw.debug(true);
+			lifx.setDebug(true);
 			break;
 
 		case 0x39: // 9
 			console.log("Disabling debug");
-			gw.debug(false);
+			lifx.setDebug(false);
 			break;
 
 		case 0x61: // a
 			console.log("Requesting info");
-			gw.findBulbs();
+			lx.findBulbs();
 			break;
 
 		case 0x03: // ctrl-c
 			console.log("Closing...");
-			gw.close();
+			lx.close();
 			process.stdin.pause();
-			//process.exit();
+			process.exit();
 			break;
 
 	}
 });
-
