@@ -45,6 +45,7 @@ sent as the bytes 0xd0 0x07.
  * 0x1f - bulb to app - unknown
  * 0x65 - app to bulb - status request
  * 0x66 - app to bulb - set bulb state request
+ * 0x68 - app to bulb - unknown
  * 0x6b - bulb to app - status response
 
 ## Discovery
@@ -210,4 +211,6 @@ These follow the standard prefix, so the given examples are from byte 32 onwards
 
  * 0x1f (bulb to app) - eg 1f:00:00:00:ff:ff:ff:ff:ff:ff:ff:ff:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
  * 0x1d (app to bulb) - eg 1d:00:00:00:ff:ff:ff:ff:ff:ff:ff:ff
+ * 0x68 (app to bulb) - 1st packet eg 68:00:00:00:00:80:90:01:00:00
+ * 0x68 (app to bulb) - 2nd packet eg 68:00:00:00:00:80:90:01:00:00:2a:00:00:14:00:00:00:00:d0:73:d5:00:11:86:00:00:d0:73:d5:00:11:86:00:00:00:00:00:00:00:00:00:00:68:00:00:00:00:80:90:01:00:00
 
