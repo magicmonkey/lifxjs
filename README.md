@@ -12,6 +12,10 @@ initially setup to hop onto your wireless network; I configured mine with the
 iPhone app, and this library is (currently) for manipulating the bulbs once
 they are already attached to your network.
 
+__Warning: I'm currently refactoring the code a little because of the
+possibility of two or more bulbs on a network acting as a gateway.  This will
+change the way that the initial discovery interface works.__
+
 _Bonus: There's a demo web app in the "web" dir which just displays a colour
         picker and sets the bulbs to the chosen colour, and a demo mqtt bridge
         in the "mqtt" dir which bridges between an MQTT broker and the bulbs_
