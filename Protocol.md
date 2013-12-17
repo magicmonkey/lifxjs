@@ -211,8 +211,10 @@ These follow the standard prefix, so the given examples are from byte 32 onwards
 
  * 0x1f (bulb to app) - eg 1f:00:00:00:ff:ff:ff:ff:ff:ff:ff:ff:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
  * 0x1d (app to bulb) - eg 1d:00:00:00:ff:ff:ff:ff:ff:ff:ff:ff
- * 0x68 (app to bulb) - 68:00:00:00:00:80:90:01:00:00 - I've also seen this
-                        with 2 packets concatenated into one TCP packet, ie a
-                        length of 0x2a with packet of type 0x68, then another
-                        length of 0x2a with packet of type 0x68
+ * 0x68 (app to bulb) - 68:00:00:00:00:80:90:01:00:00 - from the Android app.
+                        I've also seen this with 2 packets concatenated into
+                        one TCP packet, ie a length of 0x2a with packet of type
+                        0x68, then another length of 0x2a with packet of type
+                        0x68.
+ * 0x68 (app to bulb) - 68:00:00:00:00:00:00:00:00:00 - from the iPhone app.
 
