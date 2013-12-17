@@ -22,8 +22,13 @@ _Bonus: There's a demo web app in the "web" dir which just displays a colour
 
 ## Install
 
-Not yet available through NPM, although you need to run ```npm install``` in
-this dir to get the "clone" dependency.
+To install from NPM, do ```npm install lifx```, or just clone the github repo
+(but you'll need to run ```npm install``` in this dir to get the "clone"
+dependency if you get from github).
+
+If you install form NPM, then do ```require("lifx");```.  If you cloned the
+github repo then you'll need to do something like ```require("./lifx");``` (ie
+specify the path to the dir you cloned into).
 
 If you want to run the web or mqtt app, you also need to run ```npm install```
 in the respective dir to get their dependencies.
