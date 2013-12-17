@@ -141,7 +141,7 @@ stdin.on('data', function (key) {
 			console.log("Closing...");
 			lx.close();
 			process.stdin.pause();
-			process.exit();
+			//process.exit();
 			break;
 
 	}

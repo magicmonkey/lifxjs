@@ -18,6 +18,7 @@ function Lifx() {
 	events.EventEmitter.call(this);
 	this.gateways = [];
 	this.bulbs = [];
+	this._intervalID = null;
 }
 Lifx.prototype.__proto__ = events.EventEmitter.prototype;
 
@@ -124,7 +125,7 @@ Lifx.prototype.startDiscovery = function() {
 		UDPClient.setBroadcast(true);
 		var intervalID;
 		// Now send the discovery packets
-		intervalID = setInterval(function() {
+		self._intervalID = setInterval(function() {
 			var message = new Buffer([0x24, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00]);
 			if (debug) console.log(" U+ " + message.toString("hex"));
 			UDPClient.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
@@ -240,6 +241,7 @@ Gateway.prototype.close = function() {
 };
 
 Lifx.prototype.close = function() {
+	clearInterval(this._intervalID);
 	this.gateways.forEach(function(g) {
 		g.close();
 	});
