@@ -70,7 +70,7 @@ Lifx.prototype.foundBulb = function(data, gw) {
 	// Find the end of the name
 	var endPos = 49;
 	for (var i=48; i<data.length; i++) {
-		if (data[i] == 0) {
+		if (data[i] === 0) {
 			endPos = i;
 			break;
 		}
@@ -81,8 +81,8 @@ Lifx.prototype.foundBulb = function(data, gw) {
 	if (debug) console.log(" * Found a bulb: " + bulbName + " (address " + util.inspect(lifxAddress) + ")");
 
 	var found = false;
-	for (var i in this.bulbs) {
-		if (this.bulbs[i].lifxAddress.toString("hex") == lifxAddress.toString("hex")) {
+	for (var bulbId in this.bulbs) {
+		if (this.bulbs[bulbId].lifxAddress.toString("hex") == lifxAddress.toString("hex")) {
 			found = true;
 		}
 	}
