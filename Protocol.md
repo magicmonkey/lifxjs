@@ -1,24 +1,27 @@
 # Observed LIFX network protocol
 
-It is a work in progress and is not, in any way, affiliated or related to LIFX Labs.
+It is a work in progress and is not, in any way, affiliated or related to LIFX
+Labs.
 
 ## Packet frame
 
 The network protocol uses UDP and TCP in various places, but there seems to be
-a common packet format used. Packet field data appears to be of mixed endianness.
+a common packet format used. Packet field data appears to be of mixed
+endianness.
 
 <pre>
 packet
 {
   uint16 size;              // LE
   uint16 protocol;
-  uint32 reserved1;
-  byte   target_mac_address[8];
-  byte   site[6];
-  uint16 reserved2;
+  uint32 reserved1;         // Always 0x0000
+  byte   target_mac_address[6];
+  uint16 reserved2;         // Always 0x00
+  byte   site[6];           // MAC address of gateway PAN controller bulb
+  uint16 reserved3;         // Always 0x00
   uint64 timestamp;
-  uint16 type;              // LE
-  byte   reserved[2];
+  uint16 packet_type;       // LE
+  byte   reserved[2];       // Always 0x00
 }
 </pre>
 
@@ -63,7 +66,8 @@ packet
 
 The apps start by sending UDP "discovery" packets to the network broadcast
 address, port 56700.  They do this repeatedly until a bulb responds by sending
-a UDP packet back to you on port 56700. Packets are identified via its type (of 0x03).
+a UDP packet back to you on port 56700. Packets are identified via its type (of
+0x03).
 
 The first response which matches this is what I'm using as the "controller"
 bulb.  The controller appears to continue sending UDP packets, but I have not
@@ -192,7 +196,8 @@ It is generally sent as a result of an on/off command from the apps.
 
 ### Packet type 0x19 - Change name response
 
-This is sent by the bulbs to the apps to say when a name change has been requested.
+This is sent by the bulbs to the apps to say when a name change has been
+requested.
  * Byte  32:        0x16
  * Bytes 33 - 35:   Always zeroes.
  * Bytes 36 - end:  New name, standard ascii encoding. Max length unknown.
@@ -214,17 +219,4 @@ bulbs are at the present time.
  * Bytes 44 - 45:  Unknown, but these seem to be zeroes.
  * Bytes 46 - 47:  On/off - 0xffff means on, and 0x0000 means off.
  * Bytes 48 - end: The name of the bulb as set by the iPhone app.
-
-## Other observed packet types
-
-These follow the standard prefix, so the given examples are from byte 32 onwards.
-
- * 0x1f (bulb to app) - eg 1f:00:00:00:ff:ff:ff:ff:ff:ff:ff:ff:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
- * 0x1d (app to bulb) - eg 1d:00:00:00:ff:ff:ff:ff:ff:ff:ff:ff
- * 0x68 (app to bulb) - 68:00:00:00:00:80:90:01:00:00 - from the Android app.
-                        I've also seen this with 2 packets concatenated into
-                        one TCP packet, ie a length of 0x2a with packet of type
-                        0x68, then another length of 0x2a with packet of type
-                        0x68.
- * 0x68 (app to bulb) - 68:00:00:00:00:00:00:00:00:00 - from the iPhone app.
 
