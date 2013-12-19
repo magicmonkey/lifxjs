@@ -1,59 +1,69 @@
 # Observed LIFX network protocol
 
-This is based purely on observations from using tcpdump and Wireshark (which are
-both excellent tools) whilst using the iPhone app.  I have 2 bulbs, and
-(currently) have no idea what most of the bytes in the network protocol mean.
-However, the hope is that documenting what I find here will help in some way.
+It is a work in progress and is not, in any way, affiliated or related to LIFX Labs.
 
-It is a work in progress, and not in any way affiliated or related to LIFXlabs.
-
-## Common elements
+## Packet frame
 
 The network protocol uses UDP and TCP in various places, but there seems to be
-a common packet format used inside both layers.
+a common packet format used. Packet field data appears to be of mixed endianness.
 
- * Byte  0:        The first byte is the packet length.
- * Bytes 1 - 2:    The next 2 bytes are always zero; they could be the packet
-                   length for longer packets (ie >255 bytes).
- * Byte  3:        Appears to indicate direction of data; 0x14 = app to one
-                   bulb, 0x34 = app to all bulbs, 0x54 = bulb to app
- * Bytes 4 - 7:    These always seem to be zero (could be padding on the
-                   previous or subsequent fields)
- * Bytes 8 - 13:   The MAC address of the target bulb (if byte 3 is 0x14), or
-                   all zeroes if the target is all bulbs (ie byte 3 is 0x34).
- * Bytes 14 - 15:  Always zeroes.
- * Bytes 16 - 21:  These look like the MAC address of the gateway bulb, ie the
-                   one which is talking to the wifi network and the iPhone app.
- * Bytes 22 - 23:  Always zeroes.
- * Bytes 24 - 31:  Always zeroes.
- * Byte  32:       Packet type.
- * Bytes 33 - end: Depends on the packet type.
-
-In general, a 16 bit number looks to be least-significant byte first, then
-most-significant-byte, for example the decimal number 2000 (0x7d0) would be
-sent as the bytes 0xd0 0x07.
+<pre>
+packet
+{
+  uint16 size;              // LE
+  uint16 protocol;
+  uint32 reserved1;
+  byte   target_mac_address[8];
+  byte   site[6];
+  uint16 reserved2;
+  uint64 timestamp;
+  uint16 type;              // LE
+  byte   reserved[2];
+}
+</pre>
 
 ## Packet types
 
- * 0x02 - app to bulb - discovery request
- * 0x03 - bulb to app - discovery response
- * 0x15 - app to bulb - on/off request
- * 0x16 - bulb to app - on/off response
- * 0x18 - app to bulb - change name request
- * 0x19 - bulb to app - change name response
- * 0x1d - app to bulb - unknown
- * 0x1f - bulb to app - unknown
+### Network management
+ * 0x02 - app to bulb - get PAN gateway
+ * 0x03 - bulb to app - device state<pan gateway>
+
+### Power management
+ * 0x15 - app to bulb - set state
+ * 0x16 - bulb to app - power state
+ * 0x20 - app to bulb - get state [?]
+
+### Wireless management
+ * 0x12d - app to bulb - get state
+ * 0x12e - app to bulb - set state
+ * 0x12f - bulb to app - wifi state
+ * 0x130 - app to bulb - get access point
+ * 0x131 - app to bulb - set access point
+ * 0x132 - bulb to app - wifi state<access point>
+
+### Labels and Tags
+ * 0x17 - app to bulb - get label
+ * 0x18 - app to bulb - set label
+ * 0x19 - bulb to app - device state<label>
+ * 0x1a - app to bulb - get tags
+ * 0x1c - bulb to app - device state<tags>
+ * 0x1d - app to bulb - get tag labels
+ * 0x1f - bulb to app - device state<tag labels>
  * 0x65 - app to bulb - status request
- * 0x66 - app to bulb - set bulb state request
- * 0x68 - app to bulb - unknown
- * 0x6b - bulb to app - status response
+
+### Brightness and Colors
+ * 0x66 - app to bulb - set color
+ * 0x67 - app to bulb - set waveform
+ * 0x68 - app to bulb - set dim (absolute)
+ * 0x69 - app to bulb - set dim (relative)
+ * 0x6b - bulb to app - light state
+ 
 
 ## Discovery
 
 The apps start by sending UDP "discovery" packets to the network broadcast
 address, port 56700.  They do this repeatedly until a bulb responds by sending
-a UDP packet back to you on port 56700 - I identify these by the packet type
-(ie byte 32) containing 0x03.
+a UDP packet back to you on port 56700. Packets are identified via its type (of 0x03).
 
 The first response which matches this is what I'm using as the "controller"
 bulb.  The controller appears to continue sending UDP packets, but I have not
