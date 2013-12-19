@@ -46,7 +46,7 @@ Lifx.prototype._getPacketHandler = function() {
 
 Lifx.prototype._gotPacket = function(data, gw) {
 	if (debug) console.log(" T- " + data.toString("hex"));
-	
+
 	switch (data[32]) {
 
 		case 0x6b:
@@ -70,7 +70,7 @@ Lifx.prototype.foundBulb = function(data, gw) {
 	// Find the end of the name
 	var endPos = 49;
 	for (var i=48; i<data.length; i++) {
-		if (data[i] == 0) {
+		if (data[i] === 0) {
 			endPos = i;
 			break;
 		}
@@ -81,8 +81,8 @@ Lifx.prototype.foundBulb = function(data, gw) {
 	if (debug) console.log(" * Found a bulb: " + bulbName + " (address " + util.inspect(lifxAddress) + ")");
 
 	var found = false;
-	for (var i in this.bulbs) {
-		if (this.bulbs[i].lifxAddress.toString("hex") == lifxAddress.toString("hex")) {
+	for (var bulbId in this.bulbs) {
+		if (this.bulbs[bulbId].lifxAddress.toString("hex") == lifxAddress.toString("hex")) {
 			found = true;
 		}
 	}
@@ -108,7 +108,7 @@ Lifx.prototype.startDiscovery = function() {
 	var self = this;
 	var UDPClient = dgram.createSocket("udp4");
 	UDPClient.unref(); // Stop this from preventing Node from ending
-	
+
 	UDPClient.on("error", function (err) {
 		console.log("UDP error " + err);
 	});
@@ -185,7 +185,7 @@ Gateway.prototype.connect = function(cb) {
 			self.connect();
 		}
 	});
-}
+};
 
 Lifx.prototype.findBulbs = function() {
 	this.gateways.forEach(function(g) {
