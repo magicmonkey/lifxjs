@@ -34,7 +34,7 @@ console.log("Press 9 to hide debug messages including network traffic");
 //console.log("Press a to request an info update from the lights");
 
 var stdin = process.openStdin();
-process.stdin.setRawMode(true)
+process.stdin.setRawMode(true);
 process.stdin.resume();
 
 var cycledColour = 0;

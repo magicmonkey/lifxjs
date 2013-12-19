@@ -46,7 +46,7 @@ Lifx.prototype._getPacketHandler = function() {
 
 Lifx.prototype._gotPacket = function(data, gw) {
 	if (debug) console.log(" T- " + data.toString("hex"));
-	
+
 	switch (data[32]) {
 
 		case 0x6b:
@@ -108,7 +108,7 @@ Lifx.prototype.startDiscovery = function() {
 	var self = this;
 	var UDPClient = dgram.createSocket("udp4");
 	UDPClient.unref(); // Stop this from preventing Node from ending
-	
+
 	UDPClient.on("error", function (err) {
 		console.log("UDP error " + err);
 	});
@@ -185,7 +185,7 @@ Gateway.prototype.connect = function(cb) {
 			self.connect();
 		}
 	});
-}
+};
 
 Lifx.prototype.findBulbs = function() {
 	this.gateways.forEach(function(g) {

@@ -4,7 +4,7 @@ var util = require('util');
 var lx = lifx.init();
 
 var stdin = process.openStdin();
-process.stdin.setRawMode(true)
+process.stdin.setRawMode(true);
 process.stdin.resume();
 
 console.log("Control 2 lights independently: press numbers 1-8");
