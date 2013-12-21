@@ -117,3 +117,12 @@ If you want to see debug messages (including network traffic) then call
 lifx.setDebug(true);
 ```
 
+## Wireshark dissector
+
+There is a wireshark dissector for the LIFX protocol in the "wireshark"
+directory.  To load it, run Wireshark with:
+
+```
+/path/to/wireshark -X lua_script:/path/to/lifx.lua
+```
+
