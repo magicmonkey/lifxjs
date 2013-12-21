@@ -136,7 +136,6 @@ enum INTERFACE_MODE : byte
 
 enum SECURITY_PROTOCOL : byte
 {
-   UNKNOWN,
    OPEN,
    WEP_PSK, // Not officially supported
    WPA_TKIP_PSK,
