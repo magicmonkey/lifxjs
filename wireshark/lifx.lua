@@ -78,7 +78,7 @@ end
 
 -- 0x66 or 26112
 function setBulbState(buffer, pinfo, tree)
-	tree:append_text(" (set bulb state)")
+	tree:append_text(" (Set bulb state)")
 	tree:add_le(F.hue, buffer(37,2))
 	tree:add_le(F.saturation, buffer(39,2))
 	tree:add_le(F.luminance,  buffer(41,2))
@@ -88,7 +88,7 @@ end
 
 -- 0x16 or 5632
 function onoffResponse(buffer, pinfo, tree)
-	tree:append_text(" (on/off response)")
+	tree:append_text(" (On/off response)")
 	tree:add(F.onoffRes, buffer(36, 2))
 	if (buffer(36, 2):uint() == 0) then tree:append_text(" (Off)") end
 	if (buffer(36, 2):uint() == 65535) then tree:append_text(" (On)") end
@@ -96,13 +96,13 @@ end
 
 -- 0x19 or 6400
 function changeNameResponse(buffer, pinfo, tree)
-	tree:append_text(" (change name response)")
+	tree:append_text(" (Change name response)")
 	tree:add(F.bulbName, buffer(36))
 end
 
 -- 0x6b or 27392
 function statusResponse(buffer, pinfo, tree)
-	tree:append_text(" (status response)")
+	tree:append_text(" (Status response)")
 	tree:add_le(F.hue       , buffer(36  , 2))
 	tree:add_le(F.saturation, buffer(38  , 2))
 	tree:add_le(F.luminance , buffer(40  , 2))
@@ -116,17 +116,17 @@ end
 
 -- 0x68 or 26624
 function setDimAbsolute(buffer, pinfo, tree)
-	tree:append_text(" (set dim - absolute)")
+	tree:append_text(" (Set dim - absolute)")
 end
 
 -- 0x69 or 26880
 function setDimRelative(buffer, pinfo, tree)
-	tree:append_text(" (set dim - relative)")
+	tree:append_text(" (Set dim - relative)")
 end
 
 -- 0x12f or 12033
 function wifiState(buffer, pinfo, tree)
-	tree:append_text(" (wifi state)")
+	tree:append_text(" (Wifi state)")
 end
 
 packetTable = switch {
