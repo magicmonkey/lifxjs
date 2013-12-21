@@ -134,13 +134,13 @@ payload
 
 enum INTERFACE_MODE : byte
 {
-  SOFT_AP, // listen + connect
-  STATION  // connect
+  SOFT_AP = 1, // listen + connect
+  STATION      // connect
 }
 
 enum SECURITY_PROTOCOL : byte
 {
-   OPEN,
+   OPEN = 1,
    WEP_PSK, // Not officially supported
    WPA_TKIP_PSK,
    WPA_AES_PSK,
