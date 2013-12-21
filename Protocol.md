@@ -21,6 +21,7 @@ packet
   uint16 reserved3;         // Always 0x00
   uint64 timestamp;
   uint16 packet_type;       // LE
+  uint16 reserved4;         // Always 0x0000
   
   varies payload;
 }
