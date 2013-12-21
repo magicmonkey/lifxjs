@@ -9,7 +9,7 @@ The network protocol uses UDP and TCP in various places, but there seems to be
 a common packet format used. Packet field data appears to be of mixed
 endianness.
 
-<pre>
+````c
 packet
 {
   uint16 size;              // LE
@@ -21,9 +21,10 @@ packet
   uint16 reserved3;         // Always 0x00
   uint64 timestamp;
   uint16 packet_type;       // LE
-  byte   reserved[2];       // Always 0x00
+  
+  varies payload;
 }
-</pre>
+````
 
 ## Packet types
 
@@ -52,16 +53,15 @@ packet
  * 0x1c - bulb to app - device state<tags>
  * 0x1d - app to bulb - get tag labels
  * 0x1f - bulb to app - device state<tag labels>
- * 0x65 - app to bulb - status request
 
 ### Brightness and Colors
+ * 0x65 - app to bulb - get color
  * 0x66 - app to bulb - set color
  * 0x67 - app to bulb - set waveform
  * 0x68 - app to bulb - set dim (absolute)
  * 0x69 - app to bulb - set dim (relative)
  * 0x6b - bulb to app - light state
  
-
 ## Discovery
 
 The apps start by sending UDP "discovery" packets to the network broadcast
@@ -101,17 +101,55 @@ via UDP to port 56700 to the network broadcast address.
 After receiving this packet, I open a TCP connection to the originator on TCP
 port 56700 for subsequent communication.
 
+## Registration
+
+An unconfigured bulb will listen at 172.16.0.1 and act as an access point,
+hosting a secure network with the name "LIFX Bulb" and password of 'lifx1234'.
+
+Configuration of a bulb involves connecting to the bulb's hosted network and
+sending a "set access point" message to the bulb. This message contains the
+information it needs to join your existing wireless network infrastructure
+(such as SSID and password). Networks using WEP security are not supported.
+
+After receipt of the message, the bulb will shut down the hosted network
+and attempt connection to the existing wireless network infrastructure.
+
+### Packet type 0x131 - Set Access Point
+
+#### Payload (98 bytes)
+
+````c
+payload
+{
+  INTERFACE_MODE interface;
+  char ssid[32];
+  char password[64];
+  SECURITY_PROTOCOL security_protocol; 
+}
+
+enum INTERFACE_MODE : byte
+{
+  SOFT_AP, // listen + connect
+  STATION  // connect
+}
+
+enum SECURITY_PROTOCOL : byte
+{
+   UNKNOWN,
+   OPEN,
+   WEP_PSK, // Not officially supported
+   WPA_TKIP_PSK,
+   WPA_AES_PSK,
+   WPA2_AES_PSK,
+   WPA2_TKIP_PSK,
+   WPA2_MIXED_PSK,
+}
+````
+
 ## Control
 
 After finding a controller bulb, open a TCP connection to it on port 56700.
 All commands are sent down this stream.
-
-The packet types (byte 32) which I've seen so far:
-
- * 0x15 sets the on/off status of a bulb
- * 0x18 changes the name of a bulb
- * 0x65 requests 0x6b packets for each bulb
- * 0x66 changes the color and brightness of a bulb
 
 ### Packet type 0x15 - On / off request
 
