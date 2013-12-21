@@ -88,7 +88,7 @@ zeroes because it does not yet know about the gateway bulb.
 Will hopefully cause a packet type 0x03 to be sent back; the apps should treat
 the originator of this response as the gateway bulb for further communication.
 
-### Packet type 0x03 - Discovery response
+### Packet type 0x03 - Device state response
 
 This is the response to the discovery packet, and is sent by the gateway bulb
 via UDP to port 56700 to the network broadcast address.
