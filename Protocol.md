@@ -115,6 +115,10 @@ information it needs to join your existing wireless network infrastructure
 After receipt of the message, the bulb will shut down the hosted network
 and attempt connection to the existing wireless network infrastructure.
 
+The "get access point" message can be used to enumerate wireless access points
+visible by the bulb.
+
+
 ### Packet type 0x131 - Set Access Point
 
 #### Payload (98 bytes)
@@ -123,8 +127,8 @@ and attempt connection to the existing wireless network infrastructure.
 payload
 {
   INTERFACE_MODE interface;
-  char ssid[32];
-  char password[64];
+  char ssid[32];      // UTF-8 encoded string
+  char password[64];  // UTF-8 encoded string
   SECURITY_PROTOCOL security_protocol; 
 }
 
