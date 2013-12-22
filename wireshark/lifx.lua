@@ -1,26 +1,32 @@
 local lifx = Proto("lifx", "LIFX wifi lightbulb")
 
+local onOffStrings = {
+	[0x0000] = "Off",
+	[0x0001] = "On",
+	[0xffff] = "On"
+}
+
 local F = lifx.fields
 
-F.size       = ProtoField.uint16("lifx.size"      , "Packet size"   , base.HEX)
-F.protocol   = ProtoField.uint16("lifx.protocol"  , "LIFX protocol" , base.HEX)
-F.reserved   = ProtoField.bytes("lifx.reserved"   , "Reserved"      , base.HEX)
-F.targetAddr = ProtoField.bytes("lifx.targetAddr" , "Target address", base.HEX)
-F.site       = ProtoField.bytes("lifx.site"       , "Site address"  , base.HEX)
-F.timestamp  = ProtoField.uint64("lifx.timestamp" , "Timestamp"     , base.HEX)
-F.packetType = ProtoField.uint16("lifx.packetType", "Packet type"   , base.HEX)
+F.size       = ProtoField.uint16("lifx.size"         , "Packet size"                 , base.HEX)
+F.protocol   = ProtoField.uint16("lifx.protocol"     , "LIFX protocol"               , base.HEX)
+F.reserved   = ProtoField.bytes("lifx.reserved"      , "Reserved"                    , base.HEX)
+F.targetAddr = ProtoField.bytes("lifx.targetAddr"    , "Target address"              , base.HEX)
+F.site       = ProtoField.bytes("lifx.site"          , "Site address"                , base.HEX)
+F.timestamp  = ProtoField.uint64("lifx.timestamp"    , "Timestamp"                   , base.HEX)
+F.packetType = ProtoField.uint16("lifx.packetType"   , "Packet type"                 , base.HEX)
 
-F.unknown1   = ProtoField.uint8("lifx.unknown1"    , "Unknown - always 1 or 2"     , base.HEX)
-F.unknown2   = ProtoField.uint32("lifx.unknown2"   , "Unknown - always 7c dd 00 00", base.HEX)
-F.onoffReq   = ProtoField.uint8("lifx.onoff"       , "On/off setting", base.HEX)
-F.bulbName   = ProtoField.string("lifx.bulbName"   , "Bulb name"     , base.HEX)
-F.hue        = ProtoField.uint16("lifx.hue"        , "Hue"           , base.HEX)
-F.saturation = ProtoField.uint16("lifx.saturation" , "Saturation"    , base.HEX)
-F.luminance  = ProtoField.uint16("lifx.luminance"  , "Luminance"     , base.HEX)
-F.colourTemp = ProtoField.uint16("lifx.colourTemp" , "Colour temperature", base.HEX)
-F.fadeTime   = ProtoField.uint16("lifx.fadeTime"   , "Fade time"     , base.HEX)
-F.fadeTime   = ProtoField.uint16("lifx.fadeTime"   , "Fade time"     , base.HEX)
-F.onoffRes   = ProtoField.uint16("lifx.onoffResponse", "On/off", base.HEX)
+F.unknown1   = ProtoField.uint8("lifx.unknown1"      , "Unknown - always 1 or 2"     , base.HEX)
+F.unknown2   = ProtoField.uint32("lifx.unknown2"     , "Unknown - always 7c dd 00 00", base.HEX)
+F.onoffReq   = ProtoField.uint8("lifx.onoff"         , "On/off setting"              , base.HEX, onOffStrings)
+F.bulbName   = ProtoField.string("lifx.bulbName"     , "Bulb name"                   , base.HEX)
+F.hue        = ProtoField.uint16("lifx.hue"          , "Hue"                         , base.HEX)
+F.saturation = ProtoField.uint16("lifx.saturation"   , "Saturation"                  , base.HEX)
+F.luminance  = ProtoField.uint16("lifx.luminance"    , "Luminance"                   , base.HEX)
+F.colourTemp = ProtoField.uint16("lifx.colourTemp"   , "Colour temperature"          , base.HEX)
+F.fadeTime   = ProtoField.uint16("lifx.fadeTime"     , "Fade time"                   , base.HEX)
+F.fadeTime   = ProtoField.uint16("lifx.fadeTime"     , "Fade time"                   , base.HEX)
+F.onoffRes   = ProtoField.uint16("lifx.onoffResponse", "On/off"                      , base.HEX, onOffStrings)
 
 function switch(t)
 	t.case = function (self, pType, buffer, pinfo, tree)
@@ -57,8 +63,6 @@ end
 function onoffRequest(buffer, pinfo, tree)
 	tree:append_text(" (On/off request)")
 	tree:add(F.onoffReq, buffer(36, 1))
-	if (buffer(36, 1):uint() == 0) then tree:append_text(" (Off)") end
-	if (buffer(36, 1):uint() == 1) then tree:append_text(" (On)") end
 end
 
 -- 0x18 or 6144
@@ -86,8 +90,6 @@ end
 function onoffResponse(buffer, pinfo, tree)
 	tree:append_text(" (On/off response)")
 	tree:add(F.onoffRes, buffer(36, 2))
-	if (buffer(36, 2):uint() == 0) then tree:append_text(" (Off)") end
-	if (buffer(36, 2):uint() == 65535) then tree:append_text(" (On)") end
 end
 
 -- 0x19 or 6400
@@ -104,9 +106,7 @@ function statusResponse(buffer, pinfo, tree)
 	tree:add_le(F.luminance , buffer(40  , 2))
 	tree:add_le(F.colourTemp, buffer(42  , 2))
 	tree:add(F.reserved     , buffer(44  , 2))
-	local onoffnode = tree:add(F.onoffRes     , buffer(46  , 2))
-	if (buffer(46, 2):uint() == 0) then onoffnode:append_text(" (Off)") end
-	if (buffer(46, 2):uint() == 65535) then onoffnode:append_text(" (On)") end
+	tree:add(F.onoffRes     , buffer(46  , 2))
 	tree:add(F.bulbName     , buffer(48))
 end
 
