@@ -9,7 +9,7 @@ The network protocol uses UDP and TCP in various places, but there seems to be
 a common packet format used. Packet field data appears to be of mixed
 endianness.
 
-````c
+```c
 packet
 {
   uint16 size;              // LE
@@ -22,10 +22,10 @@ packet
   uint64 timestamp;
   uint16 packet_type;       // LE
   uint16 reserved4;         // Always 0x0000
-  
+
   varies payload;
 }
-````
+```
 
 ## Packet types
 
@@ -123,7 +123,7 @@ visible by the bulb.
 
 #### Payload (98 bytes)
 
-````c
+```c
 payload
 {
   INTERFACE_MODE interface;
@@ -148,7 +148,7 @@ enum SECURITY_PROTOCOL : byte
    WPA2_TKIP_PSK,
    WPA2_MIXED_PSK,
 }
-````
+```
 
 ## Control
 
