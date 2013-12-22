@@ -68,7 +68,7 @@ packet
   uint16 packet_type;       // LE
   uint16 reserved4;         // Always 0x0000
 
-  varies payload;
+  varies payload;           // Documented below per packet type
 }
 ```
 
@@ -117,11 +117,19 @@ broadcast address (either the LAN broadcast address or 255.255.255.255) on UDP
 port 56700.  It has all of the address fields (bytes 10-15 and 18-23) set to
 zeroes because it does not yet know about the gateway bulb.
 
- * Byte  32:      0x02
- * Bytes 33 - 35: Always zeroes.
+#### Payload (0 bytes)
+
+```c
+payload {
+  // None
+}
+```
+
+#### Subsequent actions
 
 Will hopefully cause a packet type 0x03 to be sent back; the apps should treat
-the originator of this response as the gateway bulb for further communication.
+the originator of this response as the PAN gateway bulb for further
+communication.
 
 ### <a name="0x03"></a>0x03 - Device state response
 
@@ -129,10 +137,16 @@ This is the response to the discovery packet, and is sent by the gateway bulb
 via UDP to port 56700 to the network broadcast address.  There will be one
 packet per PAN gateway on the network.
 
- * Byte  32:      0x02
- * Bytes 33 - 35: Always zeroes.
- * Byte  36:      Unknown, observed to be either 0x01 or 0x02.
- * Bytes 37 - 40: Unknown, always 0x7c 0xdd 0x00 0x00
+#### Payload (3 bytes)
+
+```c
+payload {
+  uint8  unknown1;  // observed to be either 1 or 2
+  uint16 unknown2;  // observed to always be 0x7c 0xdd 0x00 0x00
+}
+```
+
+#### Subsequent actions
 
 After receiving this packet, I open a TCP connection to the originator on TCP
 port 56700 for subsequent communication.
@@ -153,18 +167,18 @@ payload
 enum INTERFACE_MODE : byte
 {
   SOFT_AP = 1, // listen + connect
-  STATION      // connect
+  STATION = 2  // connect
 }
 
 enum SECURITY_PROTOCOL : byte
 {
-   OPEN = 1,
-   WEP_PSK, // Not officially supported
-   WPA_TKIP_PSK,
-   WPA_AES_PSK,
-   WPA2_AES_PSK,
-   WPA2_TKIP_PSK,
-   WPA2_MIXED_PSK,
+   OPEN           = 1,
+   WEP_PSK        = 2, // Not officially supported
+   WPA_TKIP_PSK   = 3,
+   WPA_AES_PSK    = 4,
+   WPA2_AES_PSK   = 5,
+   WPA2_TKIP_PSK  = 6,
+   WPA2_MIXED_PSK = 7
 }
 ```
 
@@ -172,57 +186,92 @@ enum SECURITY_PROTOCOL : byte
 
 This packet type turns the bulbs on and off.
 
- * Byte  32:      0x15
- * Bytes 33 - 35: Always zeroes.
- * Bytes 36:      0x01 to turn on, or 0x00 to turn off
- * Bytes 37:      Always zero.
+#### Payload (2 bytes)
 
-Will generally cause a packet 0x16 in response.
+```c
+payload
+{
+  ONOFF onoff;
+}
+
+enum ONOFF : uint16
+{
+  OFF = 0,
+  ON  = 1
+}
+```
+
+#### Subsequent actions
+
+Will generally cause a packet [0x16](#0x16) in response.
 
 ### <a name="0x18"></a>0x18 - Set bulb name
 
 This packet type changes the name of a bulb
 
- * Byte  32:       0x18
- * Bytes 33 - 35:  Always zeroes.
- * Byte  36 - end: New name, standard ascii encoding. Max length unknown.
+#### Payload (variable bytes)
 
-Generated responses of packet type 0x1b (over TCP to specific IPs), and 0x19
-(over UDP to broadcast ip), and 0x6b
+```c
+payload
+{
+  char newName[]; // New name, standard ascii encoding. Max length unknown.
+}
+```
+
+#### Subsequent actions
+
+Generated responses of packet type [0x1b](#0x1b) (over TCP to specific IPs), and
+[0x19](#0x19) (over UDP to broadcast ip), and [0x6b](#0x6b).
 
 ### <a name="0x65"></a>0x65 - Get bulb status
 
 This packet prompts the gateway bulb to send a status message for each bulb.
 
- * Byte  32:      0x65
- * Bytes 33 - 35: Always zeroes.
+#### Payload (0 bytes)
 
-Will generally be followed by one or more 0x6b packets in response.
+```c
+payload {
+  // None
+}
+```
+
+#### Subsequent actions
+
+Will generally be followed by one or more [0x6b](#0x6b) packets in response.
 
 ### <a name="0x66"></a>Packet type 0x66 - Set bulb state
 
 These packets are used by the apps to send a target state to the bulbs; the
 bulbs then execute their own fade towards this state.
 
- * Byte  32:      0x66
- * Bytes 33 - 36: Always zeroes.
- * Bytes 37 - 38: These are the "hue" (ie the colour), and are the only bytes
-                  which change when rotating the colour wheel in the iPhone
-                  app.  It wraps around at 0xff 0xff back to 0x00 0x00 which is
-                  a primary red colour.
- * Bytes 39 - 40: Always 0xff 0xff (maybe saturation? ie the "amount" or depth
-                  of the colour).
- * Bytes 41 - 42: These are the "luminance" (ie the brightness)
- * Bytes 43 - 44: These are hue of the white light, basically the colour
-                  temperature.  It's what is changed by the "whites" wheel in
-                  the iPhone app.
- * Bytes 45 - 46: These say how long the fade should take.
- * Bytes 47 - 48: Unknown, but always zeroes
+#### Payload (13 bytes)
+
+```c
+payload {
+  uint8  reserved1;   // Always 0
+  uint16 hue;         // LE the "hue" (ie the colour), the only bytes which change
+                      // when rotating the colour wheel in the iPhone app.  It
+                      // wraps around at 0xff 0xff back to 0x00 0x00 which is a
+                      // primary red colour.
+  uint16 saturation;  // LE the "saturation" (ie the amount or depth of the
+                      // colour)
+  uint16 luminance;   // LE the "luminance" (ie the brightness)
+  uint16 whiteColour; // LE the "white colour", basically the colour
+                      // temperature.  It's what is changed by the "whites"
+                      // wheel in the iPhone app.
+  uint16 fadeTime;    // LE how long the fade to this colour should take
+  uint16 reserved2;   // Always 0
+}
+```
 
 Note that for the "whites", the app always sets hue and saturation (bytes 37,
 38, 39, and 40) to 0x00.  The white colour appears to have a fairly narrow
 range, such that 0-10 is very yellow, 14 is a natural white, then 15-30 fades
 to blue.  Anything beyond that seems to be very blue.
+
+#### Subsequent actions
+
+None
 
 ### <a name="0x16"></a>0x16 - On / off status
 
