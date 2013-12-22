@@ -81,31 +81,31 @@ packet
 ### Power management
  * [0x15 - Set on / off](#0x15) - app to bulb
  * [0x16 - On / off status](#0x16) - bulb to app
- * 0x20 - app to bulb - get state [?]
+ * 0x20 - Request on / off status - app to bulb
 
 ### Wireless management
- * 0x12d - app to bulb - get state
- * 0x12e - app to bulb - set state
- * 0x12f - bulb to app - wifi state
- * 0x130 - app to bulb - get access point
+ * 0x12d - Request wifi state - app to bulb
+ * 0x12e - Set wifi state - app to bulb
+ * 0x12f - Wifi state - bulb to app
+ * 0x130 - Request access points - app to bulb
  * [0x131 - Set access point](#0x131) - app to bulb
- * 0x132 - bulb to app - wifi state<access point>
+ * 0x132 - Access points - bulb to app
 
 ### Labels and Tags
- * 0x17 - app to bulb - get label
+ * 0x17 - Request bulb name - app to bulb
  * [0x18 - Set bulb name](#0x18) - app to bulb
  * [0x19 - Bulb name](#0x19) - bulb to app
- * 0x1a - app to bulb - get tags
- * 0x1c - bulb to app - device state<tags>
- * 0x1d - app to bulb - get tag labels
- * 0x1f - bulb to app - device state<tag labels>
+ * 0x1a - Request tags - app to bulb
+ * 0x1c - Tags - bulb to app
+ * 0x1d - Request tag labels - app to bulb
+ * 0x1f - Tag labels - bulb to app
 
 ### Brightness and Colors
  * [0x65 - Get bulb status](#0x65) - app to bulb
  * [0x66 - Set bulb state](#0x66) - app to bulb
- * 0x67 - app to bulb - set waveform
- * 0x68 - app to bulb - set dim (absolute)
- * 0x69 - app to bulb - set dim (relative)
+ * 0x67 - Set waveform - app to bulb
+ * 0x68 - Set dim (absolute) - app to bulb
+ * 0x69 - Set dim (relative) - app to bulb
  * [0x6b - Bulb status](#0x6b) - bulb to app
 
 ## Description of packet types
