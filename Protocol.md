@@ -269,10 +269,6 @@ Note that for the "whites", the app always sets hue and saturation (bytes 37,
 range, such that 0-10 is very yellow, 14 is a natural white, then 15-30 fades
 to blue.  Anything beyond that seems to be very blue.
 
-#### Subsequent actions
-
-None
-
 ### <a name="0x16"></a>0x16 - On / off status
 
 This is sent by the bulbs to the apps to say whether the bulbs are on or off.
@@ -293,10 +289,6 @@ enum ONOFF : uint16
 }
 ```
 
-#### Subsequent actions
-
-None
-
 ### <a name="0x19"></a>0x19 - Bulb name
 
 This is sent by the bulbs to the apps to report their name, generally after a
@@ -310,10 +302,6 @@ payload
   char newName[]; // New name, standard ascii encoding. Max length unknown.
 }
 ```
-
-#### Subsequent actions
-
-None
 
 ### <a name="0x6b"></a>0x6b - Bulb status
 
