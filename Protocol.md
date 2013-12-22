@@ -278,18 +278,42 @@ None
 This is sent by the bulbs to the apps to say whether the bulbs are on or off.
 It is generally sent as a result of an on/off command from the apps.
 
- * Byte  32:       0x16
- * Bytes 33 - 35:  Always zeroes.
- * Bytes 36 - 37:  On/off indicator; 0x0000 means the bulbs are off, and 0xffff
-                   means that the bulbs are on.
+#### Payload (2 bytes)
+
+```c
+payload
+{
+  ONOFF onoff;
+}
+
+enum ONOFF : uint16
+{
+  OFF = 0x0000,
+  ON  = 0xffff
+}
+```
+
+#### Subsequent actions
+
+None
 
 ### <a name="0x19"></a>0x19 - Bulb name
 
-This is sent by the bulbs to the apps to say when a name change has been
-requested.
- * Byte  32:        0x16
- * Bytes 33 - 35:   Always zeroes.
- * Bytes 36 - end:  New name, standard ascii encoding. Max length unknown.
+This is sent by the bulbs to the apps to report their name, generally after a
+name change has been requested to confirm the new name.
+
+#### Payload (variable bytes)
+
+```c
+payload
+{
+  char newName[]; // New name, standard ascii encoding. Max length unknown.
+}
+```
+
+#### Subsequent actions
+
+None
 
 ### <a name="0x6b"></a>0x6b - Bulb status
 
@@ -297,15 +321,16 @@ This is sent by the bulbs to the apps to indicate the current state of the
 bulbs.  If mid-fade, then this packet will show a snapshot of where the
 bulbs are at the present time.
 
- * Byte  32:       0x6b
- * Bytes 33 - 35:  Always zeroes.
- * Bytes 36 - 37:  The "hue" (ie the colour).  It wraps around at 0xff 0xff back
-                   to 0x00 0x00 which is a primary red colour.
- * Bytes 38 - 39:  The "saturation" (generally 0x00 for whites, ramping to
- *                 0xffff for a deep colour.
- * Bytes 40 - 41:  The "luminance" (ie the brightness).
- * Bytes 42 - 43:  The colour temperature (ie the "white colour")
- * Bytes 44 - 45:  Unknown, but these seem to be zeroes.
- * Bytes 46 - 47:  On/off - 0xffff means on, and 0x0000 means off.
- * Bytes 48 - end: The name of the bulb as set by the iPhone app.
+#### Payload (variable bytes)
+
+```c
+payload {
+  uint16 hue;         // LE the "hue"
+  uint16 saturation;  // LE the "saturation"
+  uint16 luminance;   // LE the "luminance"
+  uint16 whiteColour; // LE the "white colour"
+  uint16 unknown1;    //
+  char bulbName[];    // The name of the bulb
+}
+```
 
