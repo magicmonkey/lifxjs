@@ -75,12 +75,12 @@ packet
 ## List of packet types
 
 ### Network management
- * [0x02 - Get PAN gateway] - app to bulb
- * 0x03 - bulb to app - device state<pan gateway>
+ * [0x02 - Get PAN gateway](#0x02) - app to bulb
+ * [0x03 - Device state response](#0x03) - bulb to app
 
 ### Power management
- * 0x15 - app to bulb - set state
- * 0x16 - bulb to app - power state
+ * [0x15 - Set on / off](#0x15) - app to bulb
+ * [0x16 - On / off status](#0x16) - bulb to app
  * 0x20 - app to bulb - get state [?]
 
 ### Wireless management
@@ -88,29 +88,29 @@ packet
  * 0x12e - app to bulb - set state
  * 0x12f - bulb to app - wifi state
  * 0x130 - app to bulb - get access point
- * 0x131 - app to bulb - set access point
+ * [0x131 - Set access point](#0x131) - app to bulb
  * 0x132 - bulb to app - wifi state<access point>
 
 ### Labels and Tags
  * 0x17 - app to bulb - get label
- * 0x18 - app to bulb - set label
- * 0x19 - bulb to app - device state<label>
+ * [0x18 - Set bulb name](#0x18) - app to bulb
+ * [0x19 - Bulb name](#0x19) - bulb to app
  * 0x1a - app to bulb - get tags
  * 0x1c - bulb to app - device state<tags>
  * 0x1d - app to bulb - get tag labels
  * 0x1f - bulb to app - device state<tag labels>
 
 ### Brightness and Colors
- * 0x65 - app to bulb - get color
- * 0x66 - app to bulb - set color
+ * [0x65 - Get bulb status](#0x65) - app to bulb
+ * [0x66 - Set bulb state](#0x66) - app to bulb
  * 0x67 - app to bulb - set waveform
  * 0x68 - app to bulb - set dim (absolute)
  * 0x69 - app to bulb - set dim (relative)
- * 0x6b - bulb to app - light state
+ * [0x6b - Bulb status](#0x6b) - bulb to app
 
 ## Description of packet types
  
-### 0x02 - Get PAN gateway
+### <a name="0x02"></a>0x02 - Get PAN gateway
 
 This is the discovery packet, and is sent by the apps via UDP to the network
 broadcast address (either the LAN broadcast address or 255.255.255.255) on UDP
@@ -123,10 +123,11 @@ zeroes because it does not yet know about the gateway bulb.
 Will hopefully cause a packet type 0x03 to be sent back; the apps should treat
 the originator of this response as the gateway bulb for further communication.
 
-### Packet type 0x03 - Device state response
+### <a name="0x03"></a>0x03 - Device state response
 
 This is the response to the discovery packet, and is sent by the gateway bulb
-via UDP to port 56700 to the network broadcast address.
+via UDP to port 56700 to the network broadcast address.  There will be one
+packet per PAN gateway on the network.
 
  * Byte  32:      0x02
  * Bytes 33 - 35: Always zeroes.
@@ -136,8 +137,7 @@ via UDP to port 56700 to the network broadcast address.
 After receiving this packet, I open a TCP connection to the originator on TCP
 port 56700 for subsequent communication.
 
-
-### Packet type 0x131 - Set Access Point
+### <a name="0x131"></a>0x131 - Set access point
 
 #### Payload (98 bytes)
 
@@ -168,7 +168,7 @@ enum SECURITY_PROTOCOL : byte
 }
 ```
 
-### Packet type 0x15 - On / off request
+### <a name="0x15"></a>0x15 - Set on / off
 
 This packet type turns the bulbs on and off.
 
@@ -179,7 +179,7 @@ This packet type turns the bulbs on and off.
 
 Will generally cause a packet 0x16 in response.
 
-### Packet type 0x18 - Change name request
+### <a name="0x18"></a>0x18 - Set bulb name
 
 This packet type changes the name of a bulb
 
@@ -190,7 +190,7 @@ This packet type changes the name of a bulb
 Generated responses of packet type 0x1b (over TCP to specific IPs), and 0x19
 (over UDP to broadcast ip), and 0x6b
 
-### Packet type 0x65 - Status request
+### <a name="0x65"></a>0x65 - Get bulb status
 
 This packet prompts the gateway bulb to send a status message for each bulb.
 
@@ -199,7 +199,7 @@ This packet prompts the gateway bulb to send a status message for each bulb.
 
 Will generally be followed by one or more 0x6b packets in response.
 
-### Packet type 0x66 - Set bulb state request
+### <a name="0x66"></a>Packet type 0x66 - Set bulb state
 
 These packets are used by the apps to send a target state to the bulbs; the
 bulbs then execute their own fade towards this state.
@@ -224,7 +224,7 @@ Note that for the "whites", the app always sets hue and saturation (bytes 37,
 range, such that 0-10 is very yellow, 14 is a natural white, then 15-30 fades
 to blue.  Anything beyond that seems to be very blue.
 
-### Packet type 0x16 - On / off response
+### <a name="0x16"></a>0x16 - On / off status
 
 This is sent by the bulbs to the apps to say whether the bulbs are on or off.
 It is generally sent as a result of an on/off command from the apps.
@@ -234,7 +234,7 @@ It is generally sent as a result of an on/off command from the apps.
  * Bytes 36 - 37:  On/off indicator; 0x0000 means the bulbs are off, and 0xffff
                    means that the bulbs are on.
 
-### Packet type 0x19 - Change name response
+### <a name="0x19"></a>0x19 - Bulb name
 
 This is sent by the bulbs to the apps to say when a name change has been
 requested.
@@ -242,7 +242,7 @@ requested.
  * Bytes 33 - 35:   Always zeroes.
  * Bytes 36 - end:  New name, standard ascii encoding. Max length unknown.
 
-### Packet type 0x6b - Status response
+### <a name="0x6b"></a>0x6b - Bulb status
 
 This is sent by the bulbs to the apps to indicate the current state of the
 bulbs.  If mid-fade, then this packet will show a snapshot of where the
