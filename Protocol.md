@@ -3,6 +3,51 @@
 It is a work in progress and is not, in any way, affiliated or related to LIFX
 Labs.
 
+## Description of the various stages
+
+### Discovery
+
+The apps start by sending UDP "discovery" packets to the network broadcast
+address, port 56700.  They do this repeatedly until a bulb responds by sending
+a UDP packet back to you on port 56700. Packets are identified via its type (of
+0x03).
+
+The first response which matches this is what I'm using as the "controller"
+bulb.  The controller appears to continue sending UDP packets, but I have not
+yet dug in to these; my assumption is that they are general announcements to
+the rest of the network in case there are multiple apps running which want to
+control the bulbs.
+
+### Registration
+
+An unconfigured bulb will listen at 172.16.0.1 and act as an access point,
+hosting a secure network with the name "LIFX Bulb" and password of 'lifx1234'.
+
+Configuration of a bulb involves connecting to the bulb's hosted network and
+sending a "set access point" message to the bulb. This message contains the
+information it needs to join your existing wireless network infrastructure
+(such as SSID and password). Networks using WEP security are not supported.
+
+After receipt of the message, the bulb will shut down the hosted network
+and attempt connection to the existing wireless network infrastructure.
+
+The "get access point" message can be used to enumerate wireless access points
+visible by the bulb.
+
+### Control
+
+After finding a controller bulb, open a TCP connection to it on port 56700.
+All commands are sent down this stream.
+
+### Feedback messages
+
+The controller bulb appears to send data to the network as UDP packets, but it
+also sends similar packets down the TCP connection.  These packets conform to
+the common elements detailed above.
+
+If you have more than one bulb, you will get a packet for each bulb with the
+second address field changed to tell you which bulb the packet is referring to.
+
 ## Packet frame
 
 The network protocol uses UDP and TCP in various places, but there seems to be
@@ -27,10 +72,10 @@ packet
 }
 ```
 
-## Packet types
+## List of packet types
 
 ### Network management
- * 0x02 - app to bulb - get PAN gateway
+ * [0x02 - Get PAN gateway] - app to bulb
  * 0x03 - bulb to app - device state<pan gateway>
 
 ### Power management
@@ -62,21 +107,10 @@ packet
  * 0x68 - app to bulb - set dim (absolute)
  * 0x69 - app to bulb - set dim (relative)
  * 0x6b - bulb to app - light state
+
+## Description of packet types
  
-## Discovery
-
-The apps start by sending UDP "discovery" packets to the network broadcast
-address, port 56700.  They do this repeatedly until a bulb responds by sending
-a UDP packet back to you on port 56700. Packets are identified via its type (of
-0x03).
-
-The first response which matches this is what I'm using as the "controller"
-bulb.  The controller appears to continue sending UDP packets, but I have not
-yet dug in to these; my assumption is that they are general announcements to
-the rest of the network in case there are multiple apps running which want to
-control the bulbs.
-
-### Packet type 0x02 - Discovery request
+### 0x02 - Get PAN gateway
 
 This is the discovery packet, and is sent by the apps via UDP to the network
 broadcast address (either the LAN broadcast address or 255.255.255.255) on UDP
@@ -101,22 +135,6 @@ via UDP to port 56700 to the network broadcast address.
 
 After receiving this packet, I open a TCP connection to the originator on TCP
 port 56700 for subsequent communication.
-
-## Registration
-
-An unconfigured bulb will listen at 172.16.0.1 and act as an access point,
-hosting a secure network with the name "LIFX Bulb" and password of 'lifx1234'.
-
-Configuration of a bulb involves connecting to the bulb's hosted network and
-sending a "set access point" message to the bulb. This message contains the
-information it needs to join your existing wireless network infrastructure
-(such as SSID and password). Networks using WEP security are not supported.
-
-After receipt of the message, the bulb will shut down the hosted network
-and attempt connection to the existing wireless network infrastructure.
-
-The "get access point" message can be used to enumerate wireless access points
-visible by the bulb.
 
 
 ### Packet type 0x131 - Set Access Point
@@ -149,11 +167,6 @@ enum SECURITY_PROTOCOL : byte
    WPA2_MIXED_PSK,
 }
 ```
-
-## Control
-
-After finding a controller bulb, open a TCP connection to it on port 56700.
-All commands are sent down this stream.
 
 ### Packet type 0x15 - On / off request
 
@@ -210,21 +223,6 @@ Note that for the "whites", the app always sets hue and saturation (bytes 37,
 38, 39, and 40) to 0x00.  The white colour appears to have a fairly narrow
 range, such that 0-10 is very yellow, 14 is a natural white, then 15-30 fades
 to blue.  Anything beyond that seems to be very blue.
-
-## Feedback messages
-
-The controller bulb appears to send data to the network as UDP packets, but it
-also sends similar packets down the TCP connection.  These packets conform to
-the common elements detailed above.
-
-If you have more than one bulb, you will get a packet for each bulb with the
-second address field changed to tell you which bulb the packet is referring to.
-
-The packet types (byte 32) which I've seen so far:
-
- * 0x16 seems to be an on/off indicator
- * 0x19 seems to be a name change indicator
- * 0x6b seems to be a complete status indicator
 
 ### Packet type 0x16 - On / off response
 
