@@ -143,6 +143,8 @@ packetTable = switch {
 
 function lifx.dissector(buffer, pinfo, tree)
 
+	pinfo.cols.info = "LIFX"
+
 	local subtree = tree:add("LIFX")
 	subtree:add_le(F.size, buffer(0,2))
 	subtree:add(F.protocol, buffer(2,2))
