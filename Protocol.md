@@ -103,12 +103,12 @@ packet
  * 0x1f - Tag labels - bulb to app
 
 ### Brightness and Colors
- * [0x65 - Get bulb status](#0x65) - app to bulb
- * [0x66 - Set bulb state](#0x66) - app to bulb
+ * [0x65 - Get light state](#0x65) - app to bulb
+ * [0x66 - Set light color](#0x66) - app to bulb
  * 0x67 - Set waveform - app to bulb
  * 0x68 - Set dim (absolute) - app to bulb
  * 0x69 - Set dim (relative) - app to bulb
- * [0x6b - Bulb status](#0x6b) - bulb to app
+ * [0x6b - Light status](#0x6b) - bulb to app
 
 ### Time
  * [0x04 - Get time](#0x04) - app to bulb
@@ -381,9 +381,9 @@ payload
 }
 ```
 
-### <a name="0x65"></a>0x65 - Get bulb status
+### <a name="0x65"></a>0x65 - Get light state
 
-This packet prompts the gateway bulb to send a status message for each bulb.
+Sent to a bulb to request its current light state (which includes its color, dim level, power level, label, and tags).
 
 #### Payload (0 bytes)
 
@@ -397,52 +397,45 @@ payload {
 
 Will generally be followed by one or more [0x6b](#0x6b) packets in response.
 
-### <a name="0x66"></a>0x66 - Set bulb state
+### <a name="0x66"></a>0x66 - Set light color
 
-These packets are used by the apps to send a target state to the bulbs; the
-bulbs then execute their own fade towards this state.
+Sent to a bulb to configure its light color. Upon receipt, the bulb will fade towards the new color using specified timing information.
 
 #### Payload (13 bytes)
 
 ```c
 payload {
-  uint8  reserved1;   // Always 0
-  uint16 hue;         // LE the "hue" (ie the colour), the only bytes which change
-                      // when rotating the colour wheel in the iPhone app.  It
-                      // wraps around at 0xff 0xff back to 0x00 0x00 which is a
-                      // primary red colour.
-  uint16 saturation;  // LE the "saturation" (ie the amount or depth of the
-                      // colour)
-  uint16 luminance;   // LE the "luminance" (ie the brightness)
-  uint16 whiteColour; // LE the "white colour", basically the colour
-                      // temperature.  It's what is changed by the "whites"
-                      // wheel in the iPhone app.
-  uint16 fadeTime;    // LE how long the fade to this colour should take
-  uint16 reserved2;   // Always 0
+  byte stream;        // Unknown, potential "streaming" mode toggle? Set to 0x00 for now.
+  uint16 hue;         // LE NOTE: Wraps around at 0xff 0xff back to 0x00 0x00
+                      // which is a primary red colour.
+  uint16 saturation;  // LE
+  uint16 brightness;  // LE
+  uint16 kelvin;      // LE i.e. colour temperature (whites wheel in apps)
+  uint32 fade_time;   // LE Length of fade action, in seconds
 }
 ```
 
-Note that for the "whites", the app always sets hue and saturation (bytes 37,
-38, 39, and 40) to 0x00.  The white colour appears to have a fairly narrow
-range, such that 0-10 is very yellow, 14 is a natural white, then 15-30 fades
-to blue.  Anything beyond that seems to be very blue.
+Note that for the "whites", apps always sets hue and saturation to 0x00. 
+The white colour appears to have a fairly narrow range, such that 0-10 is
+very yellow, 14 is a natural white, then 15-30 fades to blue.  Anything
+beyond that seems to be very blue.
 
-### <a name="0x6b"></a>0x6b - Bulb status
+### <a name="0x6b"></a>0x6b - Light status
 
-This is sent by the bulbs to the apps to indicate the current state of the
-bulbs.  If mid-fade, then this packet will show a snapshot of where the
-bulbs are at the present time.
+Sent by a bulb after a request for light state. If this packet is received mid-fade, the packet represents a snapshot of light status at transmission time.
 
-#### Payload (variable bytes)
+#### Payload (52 bytes)
 
 ```c
 payload {
-  uint16 hue;         // LE the "hue"
-  uint16 saturation;  // LE the "saturation"
-  uint16 luminance;   // LE the "luminance"
-  uint16 whiteColour; // LE the "white colour"
-  uint16 unknown1;    //
-  char bulbName[];    // The name of the bulb
+  uint16 hue;          // LE
+  uint16 saturation;   // LE
+  uint16 brightness;   // LE
+  uint16 kelvin;       // LE
+  uint16 dim;
+  uint16 power;
+  char bulb_label[32]; // UTF-8 encoded string
+  uint64 tags;
 }
 ```
 
