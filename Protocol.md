@@ -270,7 +270,7 @@ payload
   byte unknown[14];
 }
 
-example: 23 95 85 36 00 00 00 00 15 05 00 00 00 00
+// example: 23 95 85 36 00 00 00 00 15 05 00 00 00 00
 ```
 
 ### <a name="0x12"></a>0x12 - Get wifi firmware state
@@ -300,7 +300,7 @@ payload
   uint16 unk3;
 }
 
-example: 05 0d 12 18 74 63 4f 0d 00 00 00 00 00 00 00 00 01 00 01 00
+// example: 05 0d 12 18 74 63 4f 0d 00 00 00 00 00 00 00 00 01 00 01 00
 ```
 
 ### <a name="0x14"></a>0x14 - Get power state
