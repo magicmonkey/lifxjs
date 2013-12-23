@@ -105,9 +105,9 @@ packet
 ### Brightness and Colors
  * [0x65 - Get light state](#0x65) - app to bulb
  * [0x66 - Set light color](#0x66) - app to bulb
- * 0x67 - Set waveform - app to bulb
- * 0x68 - Set dim (absolute) - app to bulb
- * 0x69 - Set dim (relative) - app to bulb
+ * [0x67 - Set waveform](#0x67) - app to bulb
+ * [0x68 - Set dim (absolute)](#0x68) - app to bulb
+ * [0x69 - Set dim (relative)](#0x69) - app to bulb
  * [0x6b - Light status](#0x6b) - bulb to app
 
 ### Time
@@ -419,6 +419,53 @@ Note that for the "whites", apps always sets hue and saturation to 0x00.
 The white colour appears to have a fairly narrow range, such that 0-10 is
 very yellow, 14 is a natural white, then 15-30 fades to blue.  Anything
 beyond that seems to be very blue.
+
+### <a name="0x67"></a>0x67 - Set waveform
+
+Sent to a bulb to configure its [waveform?]. [Advanced topic, needs expansion.]
+
+#### Payload (21 bytes)
+
+```c
+payload {
+  byte stream;
+  byte transient;
+  uint16 hue;
+  uint16 saturation;
+  uint16 brightness;
+  uint16 kelvin;
+  uint32 period;
+  float cycles;
+  uint16 duty_cycles;
+  byte waveform;
+}
+```
+
+### <a name="0x68"></a>0x68 - Set dim (absolute)
+
+Sent to a bulb to set its dim level.
+
+#### Payload (6 bytes)
+
+```c
+payload {
+  int16 brightness;
+  uint32 duration; // in seconds
+}
+```
+
+### <a name="0x69"></a>0x69 - Set dim (absolute)
+
+Sent to a bulb to set its dim level, relative to the current value.
+
+#### Payload (6 bytes)
+
+```c
+payload {
+  int16 brightness;
+  uint32 duration; // in seconds
+}
+```
 
 ### <a name="0x6b"></a>0x6b - Light status
 
