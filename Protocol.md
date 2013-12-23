@@ -279,6 +279,26 @@ enum ONOFF : uint16
 
 Will generally cause a packet [0x16](#0x16) in response.
 
+### <a name="0x16"></a>0x16 - On / off status
+
+This is sent by the bulbs to the apps to say whether the bulbs are on or off.
+It is generally sent as a result of an on/off command from the apps.
+
+#### Payload (2 bytes)
+
+```c
+payload
+{
+  ONOFF onoff;
+}
+
+enum ONOFF : uint16
+{
+  OFF = 0x0000,
+  ON  = 0xffff
+}
+```
+
 ### <a name="0x17"></a>0x17 - Get bulb label
 
 Sent to a bulb to get its label.
@@ -308,26 +328,6 @@ payload
 
 Generated responses of packet type [0x1b](#0x1b) (over TCP to specific IPs), and
 [0x19](#0x19) (over UDP to broadcast ip), and [0x6b](#0x6b).
-
-### <a name="0x16"></a>0x16 - On / off status
-
-This is sent by the bulbs to the apps to say whether the bulbs are on or off.
-It is generally sent as a result of an on/off command from the apps.
-
-#### Payload (2 bytes)
-
-```c
-payload
-{
-  ONOFF onoff;
-}
-
-enum ONOFF : uint16
-{
-  OFF = 0x0000,
-  ON  = 0xffff
-}
-```
 
 ### <a name="0x19"></a>0x19 - Bulb label
 
@@ -397,7 +397,7 @@ payload {
 
 Will generally be followed by one or more [0x6b](#0x6b) packets in response.
 
-### <a name="0x66"></a>Packet type 0x66 - Set bulb state
+### <a name="0x66"></a>0x66 - Set bulb state
 
 These packets are used by the apps to send a target state to the bulbs; the
 bulbs then execute their own fade towards this state.
