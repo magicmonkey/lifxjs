@@ -79,24 +79,24 @@ packet
  * [0x03 - Device state response](#0x03) - bulb to app
 
 ### Power management
- * 0x14 - Request on / off status - app to bulb 
+ * [0x14 - Request on / off status](#0x14) - app to bulb 
  * [0x15 - Set on / off](#0x15) - app to bulb
  * [0x16 - On / off status](#0x16) - bulb to app
 
 ### Wireless management
  * 0x10 - Get wifi info
  * 0x12 - Get wifi firmware - app to bulb
- * 0x12d - Request wifi state - app to bulb
+ * [0x12d - Request wifi state](#0x12d) - app to bulb
  * 0x12e - Set wifi state - app to bulb
  * 0x12f - Wifi state - bulb to app
- * 0x130 - Request access points - app to bulb
+ * [0x130 - Request access points](#0x130) - app to bulb
  * [0x131 - Set access point](#0x131) - app to bulb
- * 0x132 - Access points - bulb to app
+ * [0x132 - Access point](#0x132) - bulb to app
 
 ### Labels and Tags
- * 0x17 - Request bulb name - app to bulb
- * [0x18 - Set bulb name](#0x18) - app to bulb
- * [0x19 - Bulb name](#0x19) - bulb to app
+ * [0x17 - Request bulb label](#0x17) - app to bulb
+ * [0x18 - Set bulb label](#0x18) - app to bulb
+ * [0x19 - Bulb label](#0x19) - bulb to app
  * 0x1a - Request tags - app to bulb
  * 0x1c - Tags - bulb to app
  * 0x1d - Request tag labels - app to bulb
@@ -243,6 +243,19 @@ enum RESET_SWITCH_POSITION: uint16
 
 ```
 
+### <a name="0x14"></a>0x14 - Request on/off state
+
+Sent to a bulb to retrieve its current on/off state. (This packet is of questionable value.)
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
 ### <a name="0x15"></a>0x15 - Set on / off
 
 This packet type turns the bulbs on and off.
@@ -266,16 +279,28 @@ enum ONOFF : uint16
 
 Will generally cause a packet [0x16](#0x16) in response.
 
-### <a name="0x18"></a>0x18 - Set bulb name
+### <a name="0x17"></a>0x17 - Get bulb label
 
-This packet type changes the name of a bulb
+Sent to a bulb to get its label.
+
+#### Payload (0 bytes)
+
+```c
+payload {
+  // None
+}
+```
+
+### <a name="0x18"></a>0x18 - Set bulb label
+
+Sent to a bulb to change its label.
 
 #### Payload (variable bytes)
 
 ```c
 payload
 {
-  char newName[]; // New name, standard ascii encoding. Max length unknown.
+  char label[32]; // UTF-8 encoded string
 }
 ```
 
@@ -304,17 +329,16 @@ enum ONOFF : uint16
 }
 ```
 
-### <a name="0x19"></a>0x19 - Bulb name
+### <a name="0x19"></a>0x19 - Bulb label
 
-This is sent by the bulbs to the apps to report their name, generally after a
-name change has been requested to confirm the new name.
+Received from bulbs after a label request or change is made.
 
 #### Payload (variable bytes)
 
 ```c
 payload
 {
-  char newName[]; // New name, standard ascii encoding. Max length unknown.
+  char label[32]; // UTF-8 encoded string
 }
 ```
 
@@ -422,23 +446,57 @@ payload {
 }
 ```
 
+### <a name="0x12d"></a>0x12d - Request wifi state
+
+Sent to a bulb to retrieve state on one of its wireless interfaces.
+
+#### Payload (1 byte)
+
+```c
+payload
+{
+  INTERFACE interface;
+}
+
+enum INTERFACE : byte
+{
+  SOFT_AP = 1,
+  STATION = 2
+}
+```
+
+### <a name="0x130"></a>0x130 - Request access points
+
+Sent to a bulb to request a list of nearby access points.
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
 ### <a name="0x131"></a>0x131 - Set access point
+
+Sent to a bulb to configure its wireless interface. (It's not yet clear if the bulbs can act in both SOFT_AP and STA modes.)
 
 #### Payload (98 bytes)
 
 ```c
 payload
 {
-  INTERFACE_MODE interface;
+  INTERFACE interface;
   char ssid[32];      // UTF-8 encoded string
   char password[64];  // UTF-8 encoded string
   SECURITY_PROTOCOL security_protocol; 
 }
 
-enum INTERFACE_MODE : byte
+enum INTERFACE : byte
 {
-  SOFT_AP = 1, // listen + connect
-  STATION = 2  // connect
+  SOFT_AP = 1, // i.e. act as an access point
+  STATION = 2  // i.e. connect to an existing access point
 }
 
 enum SECURITY_PROTOCOL : byte
@@ -453,3 +511,30 @@ enum SECURITY_PROTOCOL : byte
 }
 ```
 
+### <a name="0x132"></a>0x132 - Access point
+
+Received from a bulb after a request for nearby access points. One packet describes one access point (i.e. you will receive a bunch of these packets).
+
+#### Payload (38 bytes)
+
+```c
+payload
+{
+  INTERFACE interface; // seems to always be 0x00, bug?
+  char ssid[32];       // UTF-8 encoded string
+  SECURITY_PROTOCOL security_protocol;
+  uint16 strength;
+  uint16 channel;
+}
+
+enum SECURITY_PROTOCOL : byte
+{
+   OPEN           = 1,
+   WEP_PSK        = 2, // Not officially supported
+   WPA_TKIP_PSK   = 3,
+   WPA_AES_PSK    = 4,
+   WPA2_AES_PSK   = 5,
+   WPA2_TKIP_PSK  = 6,
+   WPA2_MIXED_PSK = 7
+}
+```
