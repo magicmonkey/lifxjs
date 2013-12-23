@@ -88,7 +88,7 @@ packet
  * 0x12 - Get wifi firmware - app to bulb
  * [0x12d - Request wifi state](#0x12d) - app to bulb
  * 0x12e - Set wifi state - app to bulb
- * 0x12f - Wifi state - bulb to app
+ * [0x12f - Wifi state](#0x12f) - bulb to app
  * [0x130 - Request access points](#0x130) - app to bulb
  * [0x131 - Set access point](#0x131) - app to bulb
  * [0x132 - Access point](#0x132) - bulb to app
@@ -97,10 +97,10 @@ packet
  * [0x17 - Request bulb label](#0x17) - app to bulb
  * [0x18 - Set bulb label](#0x18) - app to bulb
  * [0x19 - Bulb label](#0x19) - bulb to app
- * 0x1a - Request tags - app to bulb
- * 0x1c - Tags - bulb to app
- * 0x1d - Request tag labels - app to bulb
- * 0x1f - Tag labels - bulb to app
+ * [0x1a - Request tags](#0x1a) - app to bulb
+ * [0x1c - Tags](#0x1c) - bulb to app
+ * 0x1d - Request tag labels [sic] - app to bulb
+ * 0x1f - Tag labels [sic] - bulb to app
 
 ### Brightness and Colors
  * [0x65 - Get light state](#0x65) - app to bulb
@@ -315,7 +315,7 @@ payload {
 
 Sent to a bulb to change its label.
 
-#### Payload (variable bytes)
+#### Payload (32 bytes)
 
 ```c
 payload
@@ -333,7 +333,7 @@ Generated responses of packet type [0x1b](#0x1b) (over TCP to specific IPs), and
 
 Received from bulbs after a label request or change is made.
 
-#### Payload (variable bytes)
+#### Payload (32 bytes)
 
 ```c
 payload
@@ -341,6 +341,33 @@ payload
   char label[32]; // UTF-8 encoded string
 }
 ```
+
+### <a name="0x1a"></a>0x1a - Get tags
+
+Sent to a bulb to request its tags.
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x1c"></a>0x1c - Tags
+
+Received from a bulb after a request for its tags.
+
+#### Payload (8 bytes)
+
+```c
+payload
+{
+  uint64 tags;
+}
+```
+
 
 ### <a name="0x24"></a>0x24 - MCU rail voltage
 
@@ -502,6 +529,36 @@ enum INTERFACE : byte
 {
   SOFT_AP = 1,
   STATION = 2
+}
+```
+
+### <a name="0x12f"></a>0x12f - Wifi state
+
+Received from a bulb after a request for its wifi state.
+
+#### Payload (22 bytes)
+
+```c
+payload
+{
+  INTERFACE interface;
+  WIFI_STATUS wifi_status; // Only valid if interface == STATION
+  byte ip4_address[4]
+  byte ip6_address[16];
+}
+
+enum INTERFACE : byte
+{
+  SOFT_AP = 1,
+  STATION = 2
+}
+
+enum WIFI_STATUS : byte
+{
+  CONNECTING = 0,
+  CONNECTED = 1,
+  FAILED = 2,
+  OFF = 3
 }
 ```
 
