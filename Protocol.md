@@ -227,7 +227,8 @@ payload {
 
 ### <a name="0x08"></a>0x08 - Reset switch state
 
-Received from a bulb after a request is made for the position of the physical reset switch.
+Received from a bulb after a request is made for the position of the physical
+reset switch.
 
 #### Payload (2 bytes)
 
@@ -305,7 +306,8 @@ payload
 
 ### <a name="0x14"></a>0x14 - Get power state
 
-Sent to a bulb to retrieve its current power state (i.e. on or off). This packet is of questionable value.
+Sent to a bulb to retrieve its current power state (i.e. on or off). This
+packet is of questionable value.
 
 #### Payload (0 bytes)
 
@@ -456,7 +458,9 @@ payload
 
 ### <a name="0x26"></a>0x26 - Reboot
 
-Reboots a target bulb. It has been observed that some bulbs rebooted in this manner reset their color and fail to reconnect to wireless infrastructure, necessitating a hardware reset. (Could be a timing related bug.)
+Reboots a target bulb. It has been observed that some bulbs rebooted in this
+manner reset their color and fail to reconnect to wireless infrastructure,
+necessitating a hardware reset (could be a timing related bug).
 
 #### Payload (0 bytes)
 
@@ -469,7 +473,8 @@ payload
 
 ### <a name="0x65"></a>0x65 - Get light state
 
-Sent to a bulb to request its current light state (which includes its color, dim level, power level, label, and tags).
+Sent to a bulb to request its current light state (which includes its color, dim
+level, power level, label, and tags).
 
 #### Payload (0 bytes)
 
@@ -485,13 +490,15 @@ Will generally be followed by one or more [0x6b](#0x6b) packets in response.
 
 ### <a name="0x66"></a>0x66 - Set light color
 
-Sent to a bulb to configure its light color. Upon receipt, the bulb will fade towards the new color using specified timing information.
+Sent to a bulb to configure its light color. Upon receipt, the bulb will fade
+towards the new color using specified timing information.
 
 #### Payload (13 bytes)
 
 ```c
 payload {
-  byte stream;        // Unknown, potential "streaming" mode toggle? Set to 0x00 for now.
+  byte stream;        // Unknown, potential "streaming" mode toggle? Set to
+                      // 0x00 for now.
   uint16 hue;         // LE NOTE: Wraps around at 0xff 0xff back to 0x00 0x00
                       // which is a primary red colour.
   uint16 saturation;  // LE
@@ -555,7 +562,8 @@ payload {
 
 ### <a name="0x6b"></a>0x6b - Light status
 
-Sent by a bulb after a request for light state. If this packet is received mid-fade, the packet represents a snapshot of light status at transmission time.
+Sent by a bulb after a request for light state. If this packet is received
+mid-fade, the packet represents a snapshot of light status at transmission time.
 
 #### Payload (52 bytes)
 
@@ -636,7 +644,8 @@ payload
 
 ### <a name="0x131"></a>0x131 - Set access point
 
-Sent to a bulb to configure its wireless interface. (It's not yet clear if the bulbs can act in both SOFT_AP and STA modes.)
+Sent to a bulb to configure its wireless interface. (It's not yet clear if the
+bulbs can act in both SOFT_AP and STA modes.)
 
 #### Payload (98 bytes)
 
@@ -669,7 +678,8 @@ enum SECURITY_PROTOCOL : byte
 
 ### <a name="0x132"></a>0x132 - Access point
 
-Received from a bulb after a request for nearby access points. One packet describes one access point (i.e. you will receive a bunch of these packets).
+Received from a bulb after a request for nearby access points. One packet
+describes one access point (i.e. you will receive a bunch of these packets).
 
 #### Payload (38 bytes)
 
