@@ -79,27 +79,29 @@ packet
  * [0x03 - Device state response](#0x03) - bulb to app
 
 ### Power management
- * [0x14 - Request on / off status](#0x14) - app to bulb 
- * [0x15 - Set on / off](#0x15) - app to bulb
- * [0x16 - On / off status](#0x16) - bulb to app
+ * [0x14 - Get power state](#0x14) - app to bulb 
+ * [0x15 - Set power state](#0x15) - app to bulb
+ * [0x16 - Power state](#0x16) - bulb to app
 
 ### Wireless management
- * 0x10 - Get wifi info
- * 0x12 - Get wifi firmware - app to bulb
- * [0x12d - Request wifi state](#0x12d) - app to bulb
+ * [0x10 - Get wifi info](#0x10) - app to bulb
+ * [0x11 - Wifi info](#0x11) - bulb to app
+ * [0x12 - Get wifi firmware state](#0x12) - app to bulb
+ * [0x13 - Wifi firmware state](#0x13) - bulb to app
+ * [0x12d - Get wifi state](#0x12d) - app to bulb
  * 0x12e - Set wifi state - app to bulb
  * [0x12f - Wifi state](#0x12f) - bulb to app
- * [0x130 - Request access points](#0x130) - app to bulb
+ * [0x130 - Get access points](#0x130) - app to bulb
  * [0x131 - Set access point](#0x131) - app to bulb
  * [0x132 - Access point](#0x132) - bulb to app
 
 ### Labels and Tags
- * [0x17 - Request bulb label](#0x17) - app to bulb
+ * [0x17 - Get bulb label](#0x17) - app to bulb
  * [0x18 - Set bulb label](#0x18) - app to bulb
  * [0x19 - Bulb label](#0x19) - bulb to app
- * [0x1a - Request tags](#0x1a) - app to bulb
+ * [0x1a - Get tags](#0x1a) - app to bulb
  * [0x1c - Tags](#0x1c) - bulb to app
- * 0x1d - Request tag labels [sic] - app to bulb
+ * 0x1d - Get tag labels [sic] - app to bulb
  * 0x1f - Tag labels [sic] - bulb to app
 
 ### Brightness and Colors
@@ -119,12 +121,12 @@ packet
  * [0x07 - Get reset switch](#0x07) - app to bulb
  * [0x08 - Reset switch state](#0x08) - bulb to app
  * 0x09 - Get dummy load - app to bulb
- * 0x0A - Set dummy load - app to bulb
- * 0x0B - Dummy load - bulb to app
- * 0x0D - Mesh info - bulb to app
- * 0x0C - Get mesh info - app to bulb
- * 0x0E - Get mesh firmware - app to bulb
- * 0x0F - Mesh firmware state - bulb to app
+ * 0x0a - Set dummy load - app to bulb
+ * 0x0b - Dummy load - bulb to app
+ * 0x0c - Get mesh info - app to bulb
+ * 0x0d - Mesh info - bulb to app
+ * 0x0e - Get mesh firmware - app to bulb
+ * 0x0f - Mesh firmware state - bulb to app
  * 0x20 - Get version - app to bulb
  * 0x22 - Get info - app to bulb
  * 0x23 - Info - bulb to app
@@ -243,9 +245,9 @@ enum RESET_SWITCH_POSITION: uint16
 
 ```
 
-### <a name="0x14"></a>0x14 - Request on/off state
+### <a name="0x10"></a>0x10 - Get wifi info
 
-Sent to a bulb to retrieve its current on/off state. (This packet is of questionable value.)
+Sent to a bulb to retrieve its wifi info.
 
 #### Payload (0 bytes)
 
@@ -256,9 +258,67 @@ payload
 }
 ```
 
-### <a name="0x15"></a>0x15 - Set on / off
+### <a name="0x11"></a>0x11 - Get wifi info
 
-This packet type turns the bulbs on and off.
+Received from a bulb after a request is made for its wifi info.
+
+#### Payload (14 bytes)
+
+```c
+payload
+{
+  byte unknown[14];
+}
+
+example: 23 95 85 36 00 00 00 00 15 05 00 00 00 00
+```
+
+### <a name="0x12"></a>0x12 - Get wifi firmware state
+
+Sent to a bulb to retrieve its wifi firmware [state? version?].
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x13"></a>0x13 - Wifi firmware state
+
+Received from a bulb after a request is made for its firmware [state? version?].
+
+#### Payload (20 bytes)
+
+```c
+payload
+{
+  byte   unk1[16];
+  uint16 unk2;
+  uint16 unk3;
+}
+
+example: 05 0d 12 18 74 63 4f 0d 00 00 00 00 00 00 00 00 01 00 01 00
+```
+
+### <a name="0x14"></a>0x14 - Get power state
+
+Sent to a bulb to retrieve its current power state (i.e. on or off). This packet is of questionable value.
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x15"></a>0x15 - Set power state
+
+Sent to a bulb to set its power state (i.e. on or off).
 
 #### Payload (2 bytes)
 
@@ -279,10 +339,9 @@ enum ONOFF : uint16
 
 Will generally cause a packet [0x16](#0x16) in response.
 
-### <a name="0x16"></a>0x16 - On / off status
+### <a name="0x16"></a>0x16 - Power state
 
-This is sent by the bulbs to the apps to say whether the bulbs are on or off.
-It is generally sent as a result of an on/off command from the apps.
+Received from a bulb after a request for its power state.
 
 #### Payload (2 bytes)
 
@@ -331,7 +390,7 @@ Generated responses of packet type [0x1b](#0x1b) (over TCP to specific IPs), and
 
 ### <a name="0x19"></a>0x19 - Bulb label
 
-Received from bulbs after a label request or change is made.
+Received from a bulb after a label request or change is made.
 
 #### Payload (32 bytes)
 
@@ -562,7 +621,7 @@ enum WIFI_STATUS : byte
 }
 ```
 
-### <a name="0x130"></a>0x130 - Request access points
+### <a name="0x130"></a>0x130 - Get access points
 
 Sent to a bulb to request a list of nearby access points.
 
