@@ -79,11 +79,13 @@ packet
  * [0x03 - Device state response](#0x03) - bulb to app
 
 ### Power management
+ * 0x14 - Request on / off status - app to bulb 
  * [0x15 - Set on / off](#0x15) - app to bulb
  * [0x16 - On / off status](#0x16) - bulb to app
- * 0x20 - Request on / off status - app to bulb
 
 ### Wireless management
+ * 0x10 - Get wifi info
+ * 0x12 - Get wifi firmware - app to bulb
  * 0x12d - Request wifi state - app to bulb
  * 0x12e - Set wifi state - app to bulb
  * 0x12f - Wifi state - bulb to app
@@ -107,6 +109,27 @@ packet
  * 0x68 - Set dim (absolute) - app to bulb
  * 0x69 - Set dim (relative) - app to bulb
  * [0x6b - Bulb status](#0x6b) - bulb to app
+
+### Time
+ * 0x04 - Get time - app to bulb
+ * 0x05 - Set time - app to bulb
+ * 0x06 - Time state - bulb to app
+
+### Diagnostic
+ * 0x07 - Get reset switch - app to bulb
+ * 0x09 - Get dummy load - app to bulb
+ * 0x0A - Set dummy load - app to bulb
+ * 0x0B - Dummy load - bulb to app
+ * 0x0D - Mesh info - bulb to app
+ * 0x0C - Get mesh info - app to bulb
+ * 0x0E - Get mesh firmware - app to bulb
+ * 0x0F - Mesh firmware state - bulb to app
+ * 0x20 - Get version - app to bulb
+ * 0x22 - Get info - app to bulb
+ * 0x23 - Info - bulb to app
+ * [0x24 - Get MCU rail voltage](#0x24) - app to bulb
+ * [0x25 - MCU rail voltage](#0x25) - bulb to app
+ * [0x26 - Reboot](#0x26) - app to bulb
 
 ## Description of packet types
  
@@ -300,6 +323,45 @@ name change has been requested to confirm the new name.
 payload
 {
   char newName[]; // New name, standard ascii encoding. Max length unknown.
+}
+```
+
+### <a name="0x24"></a>0x24 - MCU rail voltage
+
+Sent to a bulb to receive its microcontroller (MCU) rail voltage.
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x25"></a>0x25 - MCU rail voltage
+
+Received from a bulb after a microcontroller (MCU) rail voltage request.
+
+#### Payload (4 bytes)
+
+```c
+payload
+{
+  uint32 voltage; // [val] / 1000 = real voltage? (e.g. 4.007)
+}
+```
+
+### <a name="0x26"></a>0x26 - Reboot
+
+Reboots a target bulb. It has been observed that some bulbs rebooted in this manner reset their color and fail to reconnect to wireless infrastructure, necessitating a hardware reset. (Could be a timing related bug.)
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
 }
 ```
 
