@@ -111,12 +111,13 @@ packet
  * [0x6b - Bulb status](#0x6b) - bulb to app
 
 ### Time
- * 0x04 - Get time - app to bulb
- * 0x05 - Set time - app to bulb
- * 0x06 - Time state - bulb to app
+ * [0x04 - Get time](#0x04) - app to bulb
+ * [0x05 - Set time](#0x05) - app to bulb
+ * [0x06 - Time state](#0x06) - bulb to app
 
 ### Diagnostic
- * 0x07 - Get reset switch - app to bulb
+ * [0x07 - Get reset switch](#0x07) - app to bulb
+ * [0x08 - Reset switch state](#0x08) - bulb to app
  * 0x09 - Get dummy load - app to bulb
  * 0x0A - Set dummy load - app to bulb
  * 0x0B - Dummy load - bulb to app
@@ -174,35 +175,72 @@ payload {
 After receiving this packet, I open a TCP connection to the originator on TCP
 port 56700 for subsequent communication.
 
-### <a name="0x131"></a>0x131 - Set access point
+### <a name="0x04"></a>0x04 - Get time
 
-#### Payload (98 bytes)
+Sent to a bulb to get its internal time value.
+
+#### Payload (0 bytes)
+
+```c
+payload {
+  // None
+}
+```
+
+### <a name="0x05"></a>0x05 - Set time
+
+Sent to a bulb to set its internal time value.
+
+#### Payload (8 bytes)
+
+```c
+payload {
+  uint64 time; // microseconds since 00:00:00 UTC on 1 January 1970
+}
+```
+
+### <a name="0x06"></a>0x06 - Time state
+
+Received from a bulb after a request for its current time value.
+
+#### Payload (8 bytes)
+
+```c
+payload {
+  uint64 time; // microseconds since 00:00:00 UTC on 1 January 1970
+}
+```
+
+### <a name="0x07"></a>0x07 - Get reset switch state
+
+Sent to a bulb to get the position of the physical reset switch (up/down).
+
+#### Payload (0 bytes)
+
+```c
+payload {
+  // None
+}
+```
+
+### <a name="0x08"></a>0x08 - Reset switch state
+
+Received from a bulb after a request is made for the position of the physical reset switch.
+
+#### Payload (2 bytes)
 
 ```c
 payload
 {
-  INTERFACE_MODE interface;
-  char ssid[32];      // UTF-8 encoded string
-  char password[64];  // UTF-8 encoded string
-  SECURITY_PROTOCOL security_protocol; 
+  RESET_SWITCH_POSITION position;
 }
 
-enum INTERFACE_MODE : byte
+enum RESET_SWITCH_POSITION: uint16
 {
-  SOFT_AP = 1, // listen + connect
-  STATION = 2  // connect
+  UP = 0,
+  DOWN = 1
 }
 
-enum SECURITY_PROTOCOL : byte
-{
-   OPEN           = 1,
-   WEP_PSK        = 2, // Not officially supported
-   WPA_TKIP_PSK   = 3,
-   WPA_AES_PSK    = 4,
-   WPA2_AES_PSK   = 5,
-   WPA2_TKIP_PSK  = 6,
-   WPA2_MIXED_PSK = 7
-}
 ```
 
 ### <a name="0x15"></a>0x15 - Set on / off
@@ -245,52 +283,6 @@ payload
 
 Generated responses of packet type [0x1b](#0x1b) (over TCP to specific IPs), and
 [0x19](#0x19) (over UDP to broadcast ip), and [0x6b](#0x6b).
-
-### <a name="0x65"></a>0x65 - Get bulb status
-
-This packet prompts the gateway bulb to send a status message for each bulb.
-
-#### Payload (0 bytes)
-
-```c
-payload {
-  // None
-}
-```
-
-#### Subsequent actions
-
-Will generally be followed by one or more [0x6b](#0x6b) packets in response.
-
-### <a name="0x66"></a>Packet type 0x66 - Set bulb state
-
-These packets are used by the apps to send a target state to the bulbs; the
-bulbs then execute their own fade towards this state.
-
-#### Payload (13 bytes)
-
-```c
-payload {
-  uint8  reserved1;   // Always 0
-  uint16 hue;         // LE the "hue" (ie the colour), the only bytes which change
-                      // when rotating the colour wheel in the iPhone app.  It
-                      // wraps around at 0xff 0xff back to 0x00 0x00 which is a
-                      // primary red colour.
-  uint16 saturation;  // LE the "saturation" (ie the amount or depth of the
-                      // colour)
-  uint16 luminance;   // LE the "luminance" (ie the brightness)
-  uint16 whiteColour; // LE the "white colour", basically the colour
-                      // temperature.  It's what is changed by the "whites"
-                      // wheel in the iPhone app.
-  uint16 fadeTime;    // LE how long the fade to this colour should take
-  uint16 reserved2;   // Always 0
-}
-```
-
-Note that for the "whites", the app always sets hue and saturation (bytes 37,
-38, 39, and 40) to 0x00.  The white colour appears to have a fairly narrow
-range, such that 0-10 is very yellow, 14 is a natural white, then 15-30 fades
-to blue.  Anything beyond that seems to be very blue.
 
 ### <a name="0x16"></a>0x16 - On / off status
 
@@ -365,6 +357,52 @@ payload
 }
 ```
 
+### <a name="0x65"></a>0x65 - Get bulb status
+
+This packet prompts the gateway bulb to send a status message for each bulb.
+
+#### Payload (0 bytes)
+
+```c
+payload {
+  // None
+}
+```
+
+#### Subsequent actions
+
+Will generally be followed by one or more [0x6b](#0x6b) packets in response.
+
+### <a name="0x66"></a>Packet type 0x66 - Set bulb state
+
+These packets are used by the apps to send a target state to the bulbs; the
+bulbs then execute their own fade towards this state.
+
+#### Payload (13 bytes)
+
+```c
+payload {
+  uint8  reserved1;   // Always 0
+  uint16 hue;         // LE the "hue" (ie the colour), the only bytes which change
+                      // when rotating the colour wheel in the iPhone app.  It
+                      // wraps around at 0xff 0xff back to 0x00 0x00 which is a
+                      // primary red colour.
+  uint16 saturation;  // LE the "saturation" (ie the amount or depth of the
+                      // colour)
+  uint16 luminance;   // LE the "luminance" (ie the brightness)
+  uint16 whiteColour; // LE the "white colour", basically the colour
+                      // temperature.  It's what is changed by the "whites"
+                      // wheel in the iPhone app.
+  uint16 fadeTime;    // LE how long the fade to this colour should take
+  uint16 reserved2;   // Always 0
+}
+```
+
+Note that for the "whites", the app always sets hue and saturation (bytes 37,
+38, 39, and 40) to 0x00.  The white colour appears to have a fairly narrow
+range, such that 0-10 is very yellow, 14 is a natural white, then 15-30 fades
+to blue.  Anything beyond that seems to be very blue.
+
 ### <a name="0x6b"></a>0x6b - Bulb status
 
 This is sent by the bulbs to the apps to indicate the current state of the
@@ -381,6 +419,37 @@ payload {
   uint16 whiteColour; // LE the "white colour"
   uint16 unknown1;    //
   char bulbName[];    // The name of the bulb
+}
+```
+
+### <a name="0x131"></a>0x131 - Set access point
+
+#### Payload (98 bytes)
+
+```c
+payload
+{
+  INTERFACE_MODE interface;
+  char ssid[32];      // UTF-8 encoded string
+  char password[64];  // UTF-8 encoded string
+  SECURITY_PROTOCOL security_protocol; 
+}
+
+enum INTERFACE_MODE : byte
+{
+  SOFT_AP = 1, // listen + connect
+  STATION = 2  // connect
+}
+
+enum SECURITY_PROTOCOL : byte
+{
+   OPEN           = 1,
+   WEP_PSK        = 2, // Not officially supported
+   WPA_TKIP_PSK   = 3,
+   WPA_AES_PSK    = 4,
+   WPA2_AES_PSK   = 5,
+   WPA2_TKIP_PSK  = 6,
+   WPA2_MIXED_PSK = 7
 }
 ```
 
