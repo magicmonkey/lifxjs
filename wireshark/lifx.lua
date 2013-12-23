@@ -43,15 +43,15 @@ function switch(t)
 end
 
 function unknownPacket(buffer, pinfo, tree)
-	print("Unknown packet "..buffer(32,2):uint().." in packet number "..pinfo.number)
+	print("Unknown packet "..buffer(0,2):uint().." in packet number "..pinfo.number)
 	tree:append_text(" (Unknown packet)")
 end
 
 -- 0x03 or 768
 function deviceState(buffer, pinfo, tree)
 	tree:append_text(" (Device state response)")
-	tree:add(F.unknown1, buffer(36, 1))
-	tree:add(F.unknown2, buffer(37, 4))
+	tree:add(F.unknown1, buffer(0, 1))
+	tree:add(F.unknown2, buffer(1, 4))
 end
 
 -- 0x02 or 512
@@ -62,13 +62,13 @@ end
 -- 0x15 or 5376
 function onoffRequest(buffer, pinfo, tree)
 	tree:append_text(" (On/off request)")
-	tree:add(F.onoffReq, buffer(36, 1))
+	tree:add(F.onoffReq, buffer(0, 1))
 end
 
 -- 0x18 or 6144
 function changeName(buffer, pinfo, tree)
 	tree:append_text(" (Change name request)")
-	tree:add(F.bulbName, buffer(36))
+	tree:add(F.bulbName, buffer(0))
 end
 
 -- 0x65 or 25856
@@ -79,35 +79,35 @@ end
 -- 0x66 or 26112
 function setBulbState(buffer, pinfo, tree)
 	tree:append_text(" (Set bulb state)")
-	tree:add_le(F.hue, buffer(37,2))
-	tree:add_le(F.saturation, buffer(39,2))
-	tree:add_le(F.luminance,  buffer(41,2))
-	tree:add_le(F.colourTemp, buffer(43,2))
-	tree:add_le(F.fadeTime,   buffer(45,2))
+	tree:add_le(F.hue, buffer(1,2))
+	tree:add_le(F.saturation, buffer(3,2))
+	tree:add_le(F.luminance,  buffer(5,2))
+	tree:add_le(F.colourTemp, buffer(7,2))
+	tree:add_le(F.fadeTime,   buffer(8,2))
 end
 
 -- 0x16 or 5632
 function onoffResponse(buffer, pinfo, tree)
 	tree:append_text(" (On/off response)")
-	tree:add(F.onoffRes, buffer(36, 2))
+	tree:add(F.onoffRes, buffer(0, 2))
 end
 
 -- 0x19 or 6400
 function changeNameResponse(buffer, pinfo, tree)
 	tree:append_text(" (Change name response)")
-	tree:add(F.bulbName, buffer(36))
+	tree:add(F.bulbName, buffer(0))
 end
 
 -- 0x6b or 27392
 function statusResponse(buffer, pinfo, tree)
 	tree:append_text(" (Status response)")
-	tree:add_le(F.hue       , buffer(36  , 2))
-	tree:add_le(F.saturation, buffer(38  , 2))
-	tree:add_le(F.luminance , buffer(40  , 2))
-	tree:add_le(F.colourTemp, buffer(42  , 2))
-	tree:add(F.reserved     , buffer(44  , 2))
-	tree:add(F.onoffRes     , buffer(46  , 2))
-	tree:add(F.bulbName     , buffer(48))
+	tree:add_le(F.hue       , buffer(0 , 2))
+	tree:add_le(F.saturation, buffer(2 , 2))
+	tree:add_le(F.luminance , buffer(4 , 2))
+	tree:add_le(F.colourTemp, buffer(6 , 2))
+	tree:add(F.reserved     , buffer(8 , 2))
+	tree:add(F.onoffRes     , buffer(10, 2))
+	tree:add(F.bulbName     , buffer(12))
 end
 
 -- 0x68 or 26624
@@ -142,10 +142,15 @@ packetTable = switch {
 }
 
 function lifx.dissector(buffer, pinfo, tree)
+	analyse(buffer, pinfo, tree)
+end
 
+function analyse(buffer, pinfo, tree)
 	pinfo.cols.info = "LIFX"
 
-	local subtree = tree:add("LIFX")
+	local lifxlength = buffer(0,1):uint() + (buffer(1,1):uint() * 256)
+
+	local subtree = tree:add(buffer(0, lifxlength), "LIFX")
 	subtree:add_le(F.size, buffer(0,2))
 	subtree:add(F.protocol, buffer(2,2))
 	subtree:add(F.reserved, buffer(4,4))
@@ -157,9 +162,13 @@ function lifx.dissector(buffer, pinfo, tree)
 	subtree:add_le(F.packetType, buffer(32,2))
 	subtree:add(F.reserved, buffer(34,2))
 
-	local pSubtree = subtree:add("LIFX packet type")
-	-- print(buffer(32,2):uint())
-	packetTable:case(buffer(32,2):uint(), buffer, pinfo, pSubtree)
+	local pSubtree = subtree:add(buffer(36, lifxlength-36), "Payload")
+	packetTable:case(buffer(32,2):uint(), buffer(lifxlength-36), pinfo, pSubtree)
+
+	if (lifxlength > 0 and buffer:len() > lifxlength) then
+		analyse(buffer(lifxlength), pinfo, tree)
+	end
+
 
 end
 
