@@ -339,7 +339,7 @@ payload
 }
 ```
 
-### <a name="0x11"></a>0x11 - Get wifi info
+### <a name="0x11"></a>0x11 - Wifi info
 
 Received from a bulb after a request is made for its wifi info.
 
