@@ -76,7 +76,7 @@ packet
 
 ### Network management
  * [0x02 - Get PAN gateway](#0x02) - app to bulb
- * [0x03 - Device state response](#0x03) - bulb to app
+ * [0x03 - PAN gateway](#0x03) - bulb to app
 
 ### Power management
  * [0x14 - Get power state](#0x14) - app to bulb 
@@ -138,10 +138,12 @@ packet
  
 ### <a name="0x02"></a>0x02 - Get PAN gateway
 
-This is the discovery packet, and is sent by the apps via UDP to the network
-broadcast address (either the LAN broadcast address or 255.255.255.255) on UDP
-port 56700.  It has all of the address fields (bytes 10-15 and 18-23) set to
-zeroes because it does not yet know about the gateway bulb.
+Sent to a network (UDP broadcast) or bulb (TCP direct) to retrieve its PAN
+gateway state.
+
+This packet is typically broadcast to discover gateway bulbs on the local
+network. (UDP datagram, port 56700.) As the destination bulb is unknown,
+the packet frame's address field is zeroed out.
 
 #### Payload (0 bytes)
 
@@ -153,22 +155,28 @@ payload {
 
 #### Subsequent actions
 
-Will hopefully cause a packet type 0x03 to be sent back; the apps should treat
-the originator of this response as the PAN gateway bulb for further
-communication.
+Will hopefully cause a packet type [0x03](#0x03) to be sent back;
+apps should treat the originator of this response as a PAN gateway bulb for
+further communication.
 
-### <a name="0x03"></a>0x03 - Device state response
+### <a name="0x03"></a>0x03 - PAN gateway state
 
-This is the response to the discovery packet, and is sent by the gateway bulb
-via UDP to port 56700 to the network broadcast address.  There will be one
-packet per PAN gateway on the network.
+Received from a gateway bulb after a request for its PAN gateway state
+(direct or broadcast). One packet describes one gateway bulb (i.e. you will
+receive a few of these packets).
 
-#### Payload (3 bytes)
+#### Payload (5 bytes)
 
 ```c
 payload {
-  uint8  unknown1;  // observed to be either 1 or 2
-  uint16 unknown2;  // observed to always be 0x7c 0xdd 0x00 0x00
+  SERVICE service;
+  uint32 port;
+}
+
+enum SERVICE : byte
+{
+  UDP = 1,
+  TCP = 2
 }
 ```
 
