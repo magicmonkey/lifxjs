@@ -31,10 +31,11 @@ function switch(t)
 	t.case = function (self, pType, buffer, pinfo, tree)
 		local f=self[pType] or self.default
 		if f then
-			local subtree = tree:add(f[2])
+			-- local subtree = tree:add(f[2])
+			tree:append_text(" ("..f[2]..")")
 			pinfo.cols.info = f[2]
 			if type(f[1])=="function" then
-				f[1](buffer, pinfo, subtree, self)
+				f[1](buffer, pinfo, tree, self)
 			end
 		end
 	end
@@ -126,11 +127,11 @@ function analyse(buffer, pinfo, tree)
 	subtree:add(F.site, buffer(16,6))
 	subtree:add(F.reserved, buffer(22,2))
 	subtree:add(F.timestamp, buffer(24,8))
-	subtree:add_le(F.packetType, buffer(32,2))
+	local packetPayload = subtree:add_le(F.packetType, buffer(32,2))
 	subtree:add(F.reserved, buffer(34,2))
 
-	local pSubtree = subtree:add(buffer(36, lifxlength-36), "Payload")
-	packetTable:case(buffer(32,2):uint(), buffer(lifxlength-36), pinfo, pSubtree)
+	-- local pSubtree = subtree:add(buffer(36, lifxlength-36), "Payload")
+	packetTable:case(buffer(32,2):uint(), buffer(36), pinfo, packetPayload)
 
 	-- Check if there's another LIFX packet inside this TCP packet
 	if (lifxlength > 0 and buffer:len() > lifxlength) then
