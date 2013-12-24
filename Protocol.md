@@ -343,10 +343,11 @@ Received from a bulb after a request is made for its wifi info.
 ```c
 payload
 {
-  byte unknown[14];
+  float signal;
+  int tx;
+  int rx;
+  short mcu_temperature;
 }
-
-// example: 23 95 85 36 00 00 00 00 15 05 00 00 00 00
 ```
 
 ### <a name="0x12"></a>0x12 - Get wifi firmware state
@@ -371,12 +372,20 @@ Received from a bulb after a request is made for its firmware [state? version?].
 ```c
 payload
 {
-  byte   unk1[16];
-  uint16 unk2;
-  uint16 unk3;
+  LIFX_TIMESTAMP build;
+  LIFX_TIMESTAMP install;
+  uint32 version;
 }
 
-// example: 05 0d 12 18 74 63 4f 0d 00 00 00 00 00 00 00 00 01 00 01 00
+struct LIFX_TIMESTAMP
+{
+  byte second;
+  byte minute;
+  byte hour;
+  byte day;
+  char month[3]; // ASCII encoded
+  byte year;
+}
 ```
 
 ### <a name="0x14"></a>0x14 - Get power state
