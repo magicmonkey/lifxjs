@@ -547,7 +547,7 @@ payload {
 }
 ```
 
-### <a name="0x69"></a>0x69 - Set dim (absolute)
+### <a name="0x69"></a>0x69 - Set dim (relative)
 
 Sent to a bulb to set its dim level, relative to the current value.
 
