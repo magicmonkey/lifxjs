@@ -20,6 +20,33 @@ local onOffStrings = {
 	[0xffff] = "On"
 }
 
+local resetSwitchStrings = {
+	[0] = "Up",
+	[1] = "Down"
+}
+
+local interfaceStrings = {
+	[1] = "soft_ap",
+	[2] = "station"
+}
+
+local wifiStatusStrings = {
+	[0] = "connecting",
+	[1] = "connected",
+	[2] = "failed",
+	[3] = "off"
+}
+
+local securityProtocolStrings = {
+	[1] = "OPEN",
+	[2] = "WEP_PSK",
+	[3] = "WPA_TKIP_PSK",
+	[4] = "WPA_AES_PSK",
+	[5] = "WPA2_AES_PSK",
+	[6] = "WPA2_TKIP_PSK",
+	[7] = "WPA2_MIXED_PSK"
+}
+
 packetNames = {
 	[0x0002]   = "Get PAN Gateway",
 	[0x0003]   = "Device state response",
@@ -56,7 +83,7 @@ packetNames = {
 	[0x0025]   = "MCU rail voltage",
 	[0x0026]   = "Reboot",
 	[0x0065]   = "Get light state",
-	[0x0066]   = "Set light color",
+	[0x0066]   = "Set light colour",
 	[0x0067]   = "Set waveform",
 	[0x0068]   = "Set dim (absolute)",
 	[0x0069]   = "Set dim (relative)",
@@ -69,77 +96,201 @@ packetNames = {
 	[0x0132]   = "Access point"
 }
 
-function unknownPacket(buffer, pinfo, tree)
-	print("Unknown packet "..buffer(0,2):uint().." in packet number "..pinfo.number)
+function deviceStateResponse(buffer, pinfo, tree)
+	tree:add(F.unknown, buffer(0, 1))
+	tree:add(F.unknown, buffer(1, 2))
 end
 
-function deviceState(buffer, pinfo, tree)
-	tree:add(F.unknown1, buffer(0, 1))
-	tree:add(F.unknown2, buffer(1, 4))
+function setTime(buffer, pinfo, tree)
+	tree:add(F.time, buffer(0, 8))
 end
 
-function onoffRequest(buffer, pinfo, tree)
+function getTime(buffer, pinfo, tree)
+	tree:add(F.time, buffer(0, 8))
+end
+
+function resetSwitchState(buffer, pinfo, tree)
+	tree:add(F.time, buffer(0, 8))
+end
+
+function wifiInfo(buffer, pinfo, tree)
+	tree:add(F.unknown, buffer(0, 14))
+end
+
+function wifiFirmwareState(buffer, pinfo, tree)
+	tree:add(F.unknown, buffer(0, 16))
+	tree:add(F.unknown, buffer(0, 2))
+	tree:add(F.unknown, buffer(0, 2))
+end
+
+function setPowerState(buffer, pinfo, tree)
 	tree:add(F.onoffReq, buffer(0, 1))
 end
 
-function changeName(buffer, pinfo, tree)
-	tree:add(F.bulbName, buffer(0))
-end
-
-function setBulbState(buffer, pinfo, tree)
-	tree:add_le(F.hue, buffer(1,2))
-	tree:add_le(F.saturation, buffer(3,2))
-	tree:add_le(F.luminance,  buffer(5,2))
-	tree:add_le(F.colourTemp, buffer(7,2))
-	tree:add_le(F.fadeTime,   buffer(8,2))
-end
-
-function onoffResponse(buffer, pinfo, tree)
+function powerState(buffer, pinfo, tree)
 	tree:add(F.onoffRes, buffer(0, 2))
 end
 
-function changeNameResponse(buffer, pinfo, tree)
-	tree:add(F.bulbName, buffer(0))
+function bulbLabel(buffer, pinfo, tree)
+	tree:add(F.bulbName, buffer(0, 32))
 end
 
-function statusResponse(buffer, pinfo, tree)
+function setBulbLabel(buffer, pinfo, tree)
+	tree:add(F.bulbName, buffer(0, 32))
+end
+
+function tags(buffer, pinfo, tree)
+	tree:add(F.tags, buffer(0, 8))
+end
+
+function mcuRailVoltage(buffer, pinfo, tree)
+	tree:add(F.voltage, buffer(0, 4))
+end
+
+function setLightColour(buffer, pinfo, tree)
+	tree:add(F.stream       , buffer(0, 1))
+	tree:add_le(F.hue       , buffer(1, 2))
+	tree:add_le(F.saturation, buffer(3, 2))
+	tree:add_le(F.brightness, buffer(5, 2))
+	tree:add_le(F.kelvin    , buffer(7, 2))
+	tree:add_le(F.fadeTime  , buffer(9, 4))
+end
+
+function setWaveform(buffer, pinfo, tree)
+	tree:add(F.stream       , buffer(0 , 1))
+	tree:add(F.transient    , buffer(1 , 1))
+	tree:add_le(F.hue       , buffer(2 , 2))
+	tree:add_le(F.saturation, buffer(4 , 2))
+	tree:add_le(F.brightness, buffer(6 , 2))
+	tree:add_le(F.kelvin    , buffer(8 , 2))
+	tree:add_le(F.period    , buffer(10, 4))
+	tree:add(F.cycles       , buffer(14, 4))
+	tree:add(F.waveform     , buffer(18, 1))
+end
+
+function setDimAbsolute(buffer, pinfo, tree)
+	tree:add_le(F.brightness, buffer(0, 2))
+	tree:add_le(F.fadeTime  , buffer(2, 4))
+end
+
+function setDimRelative(buffer, pinfo, tree)
+	tree:add_le(F.brightness, buffer(0, 2))
+	tree:add_le(F.fadeTime  , buffer(2, 4))
+end
+
+function lightStatus(buffer, pinfo, tree)
 	tree:add_le(F.hue       , buffer(0 , 2))
 	tree:add_le(F.saturation, buffer(2 , 2))
-	tree:add_le(F.luminance , buffer(4 , 2))
-	tree:add_le(F.colourTemp, buffer(6 , 2))
-	tree:add(F.reserved     , buffer(8 , 2))
-	tree:add(F.onoffRes     , buffer(10, 2))
-	tree:add(F.bulbName     , buffer(12))
+	tree:add_le(F.brightness, buffer(4 , 2))
+	tree:add_le(F.kelvin    , buffer(6 , 2))
+	tree:add(F.dim          , buffer(8 , 2))
+	tree:add(F.power        , buffer(10, 2))
+	tree:add(F.bulbName     , buffer(12, 32))
+	tree:add(F.tags         , buffer(44, 8))
+end
+
+function getWifiState(buffer, pinfo, tree)
+	tree:add(F.interface, buffer(0, 1))
+end
+
+function wifiState(buffer, pinfo, tree)
+	tree:add(F.interface , buffer(0, 1))
+	tree:add(F.wifiStatus, buffer(1, 1))
+	tree:add(F.ip4Address, buffer(2, 4))
+	tree:add(F.ip6Address, buffer(6, 16))
+end
+
+function setAccessPoint(buffer, pinfo, tree)
+	tree:add(F.interface       , buffer(0 , 1))
+	tree:add(F.ssid            , buffer(1 , 32))
+	tree:add(F.password        , buffer(33, 64))
+	tree:add(F.securityProtocol, buffer(97, 1))
 end
 
 packetTable = switch {
-	[0x0003] = deviceState,
-	[0x0015] = onoffRequest,
-	[0x0018] = changeName,
-	[0x0066] = setBulbState,
-	[0x0016] = onoffResponse,
-	[0x0019] = changeNameResponse,
-	[0x006b] = statusResponse
+	[0x0002] = getPanGateway,
+	[0x0003] = deviceStateResponse,
+	[0x0004] = getTime,
+	[0x0005] = setTime,
+	[0x0006] = timeState,
+	[0x0007] = getResetSwitch,
+	[0x0008] = resetSwitchState,
+	[0x0009] = getDummyLoad,
+	[0x000a] = setDummyLoad,
+	[0x000b] = dummyLoad,
+	[0x000c] = getMeshInfo,
+	[0x000d] = meshInfo,
+	[0x000e] = getMeshFirmware,
+	[0x000f] = meshFirmwareState,
+	[0x0010] = getWifiInfo,
+	[0x0011] = wifiInfo,
+	[0x0012] = getWifiFirmwareState,
+	[0x0013] = wifiFirmwareState,
+	[0x0014] = getPowerState,
+	[0x0015] = setPowerState,
+	[0x0016] = powerState,
+	[0x0017] = getBulbLabel,
+	[0x0018] = setBulbLabel,
+	[0x0019] = bulbLabel,
+	[0x001a] = getTags,
+	[0x001c] = tags,
+	[0x001d] = getTagLabels,
+	[0x001f] = tagLabels,
+	[0x0020] = getVersion,
+	[0x0022] = getInfo,
+	[0x0023] = info,
+	[0x0024] = getMcuRailVoltage,
+	[0x0025] = mcuRailVoltage,
+	[0x0026] = reboot,
+	[0x0065] = getLightState,
+	[0x0066] = setLightColour,
+	[0x0067] = setWaveform,
+	[0x0068] = setDimAbsolute,
+	[0x0069] = setDimRelative,
+	[0x006b] = lightStatus,
+	[0x012d] = getWifiState,
+	[0x012e] = setWifiState,
+	[0x012f] = wifiState,
+	[0x0130] = getAccessPoints,
+	[0x0131] = setAccessPoint,
+	[0x0132] = accessPoint
 }
 
-F.size       = ProtoField.uint16("lifx.size"         , "Packet size"                 , base.HEX)
-F.protocol   = ProtoField.uint16("lifx.protocol"     , "LIFX protocol"               , base.HEX)
-F.reserved   = ProtoField.bytes("lifx.reserved"      , "Reserved"                    , base.HEX)
-F.targetAddr = ProtoField.ether("lifx.targetAddr"    , "Target address"              , base.HEX)
-F.site       = ProtoField.ether("lifx.site"          , "Site address"                , base.HEX)
-F.timestamp  = ProtoField.uint64("lifx.timestamp"    , "Timestamp"                   , base.HEX)
-F.packetType = ProtoField.uint16("lifx.packetType"   , "Packet type"                 , base.HEX, packetNames)
+F.size             = ProtoField.uint16("lifx.size"           , "Packet size"          , base.HEX)
+F.protocol         = ProtoField.uint16("lifx.protocol"       , "LIFX protocol"        , base.HEX)
+F.reserved         = ProtoField.bytes("lifx.reserved"        , "Reserved"             , base.HEX)
+F.targetAddr       = ProtoField.ether("lifx.targetAddr"      , "Target address"       , base.HEX)
+F.site             = ProtoField.ether("lifx.site"            , "Site address"         , base.HEX)
+F.timestamp        = ProtoField.uint64("lifx.timestamp"      , "Timestamp"            , base.HEX)
+F.packetType       = ProtoField.uint16("lifx.packetType"     , "Packet type"          , base.HEX , packetNames)
 
-F.unknown1   = ProtoField.uint8("lifx.unknown1"      , "Unknown - always 1 or 2"     , base.HEX)
-F.unknown2   = ProtoField.uint32("lifx.unknown2"     , "Unknown - always 7c dd 00 00", base.HEX)
-F.onoffReq   = ProtoField.uint8("lifx.onoff"         , "On/off setting"              , base.HEX, onOffStrings)
-F.bulbName   = ProtoField.string("lifx.bulbName"     , "Bulb name"                   , base.HEX)
-F.hue        = ProtoField.uint16("lifx.hue"          , "Hue"                         , base.HEX)
-F.saturation = ProtoField.uint16("lifx.saturation"   , "Saturation"                  , base.HEX)
-F.luminance  = ProtoField.uint16("lifx.luminance"    , "Luminance"                   , base.HEX)
-F.colourTemp = ProtoField.uint16("lifx.colourTemp"   , "Colour temperature"          , base.HEX)
-F.fadeTime   = ProtoField.uint16("lifx.fadeTime"     , "Fade time"                   , base.HEX)
-F.onoffRes   = ProtoField.uint16("lifx.onoffResponse", "On/off"                      , base.HEX, onOffStrings)
+F.unknown          = ProtoField.bytes("lifx.unknown"         , "Unknown"              , base.HEX)
+F.onoffReq         = ProtoField.uint8("lifx.onoff"           , "On/off setting"       , base.HEX , onOffStrings)
+F.bulbName         = ProtoField.string("lifx.bulbName"       , "Bulb name"            , base.HEX)
+F.hue              = ProtoField.uint16("lifx.hue"            , "Hue"                  , base.HEX)
+F.saturation       = ProtoField.uint16("lifx.saturation"     , "Saturation"           , base.HEX)
+F.brightness       = ProtoField.uint16("lifx.brightness"     , "Brightness"           , base.HEX)
+F.kelvin           = ProtoField.uint16("lifx.kelvin"         , "Colour temperature"   , base.HEX)
+F.fadeTime         = ProtoField.uint16("lifx.fadeTime"       , "Fade time"            , base.HEX)
+F.onoffRes         = ProtoField.uint16("lifx.onoffResponse"  , "On/off"               , base.HEX , onOffStrings)
+F.time             = ProtoField.uint64("lifx.time"           , "Time (us since epoch)", base.HEX)
+F.resetSwitch      = ProtoField.uint8("lifx.resetSwitch"     , "Reset switch"         , base.HEX , resetSwitchStrings)
+F.tags             = ProtoField.uint64("lifx.tags"           , "Tags"                 , base.HEX)
+F.voltage          = ProtoField.uint64("lifx.voltage"        , "Voltage"              , base.HEX)
+F.stream           = ProtoField.uint8("lifx.stream"          , "Stream"               , base.HEX)
+F.transient        = ProtoField.uint8("lifx.transient"       , "Transient"            , base.HEX)
+F.period           = ProtoField.uint32("lifx.period"         , "Period"               , base.HEX)
+F.cycles           = ProtoField.float("lifx.cycles"          , "Cycles"               , base.HEX)
+F.waveform         = ProtoField.uint8("lifx.waveform"        , "Waveform"             , base.HEX)
+F.dim              = ProtoField.uint16("lifx.dim"            , "Dim"                  , base.HEX)
+F.power            = ProtoField.uint16("lifx.power"          , "Power"                , base.HEX)
+F.interface        = ProtoField.uint8("lifx.interface"       , "Interface"            , base.HEX , interfaceStrings)
+F.wifiStatus       = ProtoField.uint8("lifx.wifiStatus"      , "Wifi status"          , base.HEX , wifiStatusStrings)
+F.ip4Address       = ProtoField.bytes("lifx.ip4Address"      , "IP4 address"          , base.HEX)
+F.ip6Address       = ProtoField.bytes("lifx.ip6Address"      , "IP6 address"          , base.HEX)
+F.ssid             = ProtoField.bytes("lifx.ssid"            , "SSID (UTF8)"          , base.HEX)
+F.password         = ProtoField.bytes("lifx.password"        , "Password (UTF8)"      , base.HEX)
+F.securityProtocol = ProtoField.bytes("lifx.securityProtocol", "Security protocol"    , base.HEX , securityProtocolStrings)
 
 function lifx.dissector(buffer, pinfo, tree)
 	analyse(buffer, pinfo, tree)
