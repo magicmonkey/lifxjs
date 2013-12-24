@@ -8,10 +8,10 @@ var timing = 0;
 var lx = lifx.init();
 
 lx.on('bulbstate', function(b) {
-	console.log('Bulb state: ' + util.inspect(b.name));
+	console.log('Bulb state: ' + util.inspect(b));
 });
 lx.on('bulbonoff', function(b) {
-	console.log('Bulb on/off: ' + util.inspect(b.name));
+	console.log('Bulb on/off: ' + util.inspect(b));
 });
 lx.on('bulb', function(b) {
 	console.log('New bulb found: ' + b.name);
