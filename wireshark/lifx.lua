@@ -11,8 +11,8 @@ local F = lifx.fields
 F.size       = ProtoField.uint16("lifx.size"         , "Packet size"                 , base.HEX)
 F.protocol   = ProtoField.uint16("lifx.protocol"     , "LIFX protocol"               , base.HEX)
 F.reserved   = ProtoField.bytes("lifx.reserved"      , "Reserved"                    , base.HEX)
-F.targetAddr = ProtoField.bytes("lifx.targetAddr"    , "Target address"              , base.HEX)
-F.site       = ProtoField.bytes("lifx.site"          , "Site address"                , base.HEX)
+F.targetAddr = ProtoField.ether("lifx.targetAddr"    , "Target address"              , base.HEX)
+F.site       = ProtoField.ether("lifx.site"          , "Site address"                , base.HEX)
 F.timestamp  = ProtoField.uint64("lifx.timestamp"    , "Timestamp"                   , base.HEX)
 F.packetType = ProtoField.uint16("lifx.packetType"   , "Packet type"                 , base.HEX)
 
