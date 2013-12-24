@@ -25,17 +25,16 @@ F.saturation = ProtoField.uint16("lifx.saturation"   , "Saturation"             
 F.luminance  = ProtoField.uint16("lifx.luminance"    , "Luminance"                   , base.HEX)
 F.colourTemp = ProtoField.uint16("lifx.colourTemp"   , "Colour temperature"          , base.HEX)
 F.fadeTime   = ProtoField.uint16("lifx.fadeTime"     , "Fade time"                   , base.HEX)
-F.fadeTime   = ProtoField.uint16("lifx.fadeTime"     , "Fade time"                   , base.HEX)
 F.onoffRes   = ProtoField.uint16("lifx.onoffResponse", "On/off"                      , base.HEX, onOffStrings)
 
 function switch(t)
 	t.case = function (self, pType, buffer, pinfo, tree)
 		local f=self[pType] or self.default
 		if f then
-			if type(f)=="function" then
-				f(buffer, pinfo, tree, self)
-			else
-				error("case "..tostring(pType).." not a function")
+			local subtree = tree:add(f[2])
+			pinfo.cols.info = f[2]
+			if type(f[1])=="function" then
+				f[1](buffer, pinfo, subtree, self)
 			end
 		end
 	end
@@ -44,41 +43,26 @@ end
 
 function unknownPacket(buffer, pinfo, tree)
 	print("Unknown packet "..buffer(0,2):uint().." in packet number "..pinfo.number)
-	tree:append_text(" (Unknown packet)")
 end
 
 -- 0x03 or 768
 function deviceState(buffer, pinfo, tree)
-	tree:append_text(" (Device state response)")
 	tree:add(F.unknown1, buffer(0, 1))
 	tree:add(F.unknown2, buffer(1, 4))
 end
 
--- 0x02 or 512
-function getPANgateway(buffer, pinfo, tree)
-	tree:append_text(" (Get PAN gateway)")
-end
-
 -- 0x15 or 5376
 function onoffRequest(buffer, pinfo, tree)
-	tree:append_text(" (On/off request)")
 	tree:add(F.onoffReq, buffer(0, 1))
 end
 
 -- 0x18 or 6144
 function changeName(buffer, pinfo, tree)
-	tree:append_text(" (Change name request)")
 	tree:add(F.bulbName, buffer(0))
-end
-
--- 0x65 or 25856
-function statusRequest(buffer, pinfo, tree)
-	tree:append_text(" (Status request)")
 end
 
 -- 0x66 or 26112
 function setBulbState(buffer, pinfo, tree)
-	tree:append_text(" (Set bulb state)")
 	tree:add_le(F.hue, buffer(1,2))
 	tree:add_le(F.saturation, buffer(3,2))
 	tree:add_le(F.luminance,  buffer(5,2))
@@ -88,19 +72,16 @@ end
 
 -- 0x16 or 5632
 function onoffResponse(buffer, pinfo, tree)
-	tree:append_text(" (On/off response)")
 	tree:add(F.onoffRes, buffer(0, 2))
 end
 
 -- 0x19 or 6400
 function changeNameResponse(buffer, pinfo, tree)
-	tree:append_text(" (Change name response)")
 	tree:add(F.bulbName, buffer(0))
 end
 
 -- 0x6b or 27392
 function statusResponse(buffer, pinfo, tree)
-	tree:append_text(" (Status response)")
 	tree:add_le(F.hue       , buffer(0 , 2))
 	tree:add_le(F.saturation, buffer(2 , 2))
 	tree:add_le(F.luminance , buffer(4 , 2))
@@ -110,35 +91,20 @@ function statusResponse(buffer, pinfo, tree)
 	tree:add(F.bulbName     , buffer(12))
 end
 
--- 0x68 or 26624
-function setDimAbsolute(buffer, pinfo, tree)
-	tree:append_text(" (Set dim - absolute)")
-end
-
--- 0x69 or 26880
-function setDimRelative(buffer, pinfo, tree)
-	tree:append_text(" (Set dim - relative)")
-end
-
--- 0x12f or 12033
-function wifiState(buffer, pinfo, tree)
-	tree:append_text(" (Wifi state)")
-end
-
 packetTable = switch {
-	[768]   = deviceState,
-	[512]   = getPANgateway,
-	[5376]  = onoffRequest,
-	[6144]  = changeName,
-	[25856] = statusRequest,
-	[26112] = setBulbState,
-	[5632]  = onoffResponse,
-	[6400]  = changeNameResponse,
-	[27392] = statusResponse,
-	[26624] = setDimAbsolute,
-	[26880] = setDimRelative,
-	[12033] = wifiState,
-	default = unknownPacket
+	[768]   = { deviceState       , "Device state response"},
+	[512]   = { nil               , "Get PAN Gateway"},
+	[5376]  = { onoffRequest      , "On/off request"},
+	[6144]  = { changeName        , "Change name request"},
+	[25856] = { nil               , "Status request"},
+	[26112] = { setBulbState      , "Set bulb state"},
+	[5632]  = { onoffResponse     , "On/off response"},
+	[6400]  = { changeNameResponse, "Change name response"},
+	[27392] = { statusResponse    , "Status response"},
+	[26624] = { nil               , "Set dim - absolute"},
+	[26880] = { nil               , "Set dim - relative"},
+	[12033] = { nil               , "Wifi state"},
+	default = { unknownPacket     , "Unknown packet"}
 }
 
 function lifx.dissector(buffer, pinfo, tree)
@@ -150,7 +116,7 @@ function analyse(buffer, pinfo, tree)
 
 	local lifxlength = buffer(0,1):uint() + (buffer(1,1):uint() * 256)
 
-	local subtree = tree:add(buffer(0, lifxlength), "LIFX")
+	local subtree = tree:add(buffer(0, lifxlength), "LIFX packet")
 	subtree:add_le(F.size, buffer(0,2))
 	subtree:add(F.protocol, buffer(2,2))
 	subtree:add(F.reserved, buffer(4,4))
