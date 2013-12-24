@@ -297,6 +297,11 @@ Lifx.prototype.lightsColour = function(hue, sat, lum, whitecol, timing, bulb) {
 	this._sendToOneOrAll(message, bulb);
 };
 
+// Request status from bulb(s)
+Lifx.prototype.requestStatus = function(bulb) {
+	this._sendToOneOrAll(new Buffer([0x65, 0x00, 0x00, 0x00]), bulb);
+};
+
 module.exports = {
 	init:init,
 	setDebug:function(d){debug=d;}
