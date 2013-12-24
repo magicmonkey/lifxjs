@@ -125,8 +125,8 @@ packet
  * 0x0b - Dummy load - bulb to app
  * 0x0c - Get mesh info - app to bulb
  * 0x0d - Mesh info - bulb to app
- * 0x0e - Get mesh firmware - app to bulb
- * 0x0f - Mesh firmware state - bulb to app
+ * [0x0e - Get mesh firmware](#0x0e) - app to bulb
+ * [0x0f - Mesh firmware state](#0x0f) - bulb to app
  * 0x20 - Get version - app to bulb
  * 0x22 - Get info - app to bulb
  * 0x23 - Info - bulb to app
@@ -244,6 +244,44 @@ enum RESET_SWITCH_POSITION: uint16
   DOWN = 1
 }
 
+```
+
+### <a name="0x0e"></a>0x0e - Get mesh firmware
+
+Sent to a bulb to retrieve wireless mesh firmware state.
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x0f"></a>0x0f - Mesh firmware state
+
+Received from a bulb after a request is made for its firmware state.
+
+#### Payload (20 bytes)
+
+```c
+payload
+{
+  LIFX_TIMESTAMP build;
+  LIFX_TIMESTAMP install;
+  uint32 version;
+}
+
+struct LIFX_TIMESTAMP
+{
+  byte second;
+  byte minute;
+  byte hour;
+  byte day;
+  char month[3]; // ASCII encoded
+  byte year;
+}
 ```
 
 ### <a name="0x10"></a>0x10 - Get wifi info
