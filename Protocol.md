@@ -89,7 +89,7 @@ packet
  * [0x12 - Get wifi firmware state](#0x12) - app to bulb
  * [0x13 - Wifi firmware state](#0x13) - bulb to app
  * [0x12d - Get wifi state](#0x12d) - app to bulb
- * 0x12e - Set wifi state - app to bulb
+ * [0x12e - Set wifi state](#0x12e) - app to bulb
  * [0x12f - Wifi state](#0x12f) - bulb to app
  * [0x130 - Get access points](#0x130) - app to bulb
  * [0x131 - Set access point](#0x131) - app to bulb
@@ -101,8 +101,8 @@ packet
  * [0x19 - Bulb label](#0x19) - bulb to app
  * [0x1a - Get tags](#0x1a) - app to bulb
  * [0x1c - Tags](#0x1c) - bulb to app
- * 0x1d - Get tag labels [sic] - app to bulb
- * 0x1f - Tag labels [sic] - bulb to app
+ * [0x1d - Get tag labels (sic?)](#0x1d) - app to bulb
+ * [0x1f - Tag labels (sic?)](#0x1f) - bulb to app
 
 ### Brightness and Colors
  * [0x65 - Get light state](#0x65) - app to bulb
@@ -127,9 +127,10 @@ packet
  * [0x0d - Mesh info](#0x0d) - bulb to app
  * [0x0e - Get mesh firmware](#0x0e) - app to bulb
  * [0x0f - Mesh firmware state](#0x0f) - bulb to app
- * 0x20 - Get version - app to bulb
- * 0x22 - Get info - app to bulb
- * 0x23 - Info - bulb to app
+ * [0x20 - Get version](#0x20) - app to bulb
+ * [0x21 - Version state](#0x21) - bulb to app
+ * [0x22 - Get info](#0x22) - app to bulb
+ * [0x23 - Info](#0x23) - bulb to app
  * [0x24 - Get MCU rail voltage](#0x24) - app to bulb
  * [0x25 - MCU rail voltage](#0x25) - bulb to app
  * [0x26 - Reboot](#0x26) - app to bulb
@@ -513,6 +514,89 @@ payload
 }
 ```
 
+### <a name="0x1d"></a>0x1d - Get tag labels
+
+Sent to a bulb to request its tag labels.
+
+#### Payload (8 bytes)
+
+```c
+payload
+{
+  uint64 tags;
+}
+```
+
+### <a name="0x1e"></a>0x1e - Tag labels
+
+Received from a bulb after a request for its tag labels.
+
+#### Payload (40 bytes)
+
+```c
+payload
+{
+  uint64 tags;
+  char label[32]; UTF-8 encoded string
+}
+```
+
+
+### <a name="0x20"></a>0x20 - Get version
+
+Sent to a bulb to request its version state.
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x21"></a>0x21 - Version state
+
+Received from a bulb after a request for its version state.
+
+#### Payload (12 bytes)
+
+```c
+payload
+{
+  uint32 vendor;
+  uint32 product;
+  uint32 version;
+}
+```
+
+### <a name="0x22"></a>0x22 - Get info
+
+Sent to a bulb to request its [info?].
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x23"></a>0x23 - Info state
+
+Sent to a bulb to request its [info?] state.
+
+#### Payload (24 bytes)
+
+```c
+payload
+{
+  uint64 time;
+  uint64 uptime;
+  uint64 downtime;
+}
+```
 
 ### <a name="0x24"></a>0x24 - MCU rail voltage
 
@@ -664,7 +748,7 @@ payload {
 }
 ```
 
-### <a name="0x12d"></a>0x12d - Request wifi state
+### <a name="0x12d"></a>0x12d - Get wifi state
 
 Sent to a bulb to retrieve state on one of its wireless interfaces.
 
@@ -683,9 +767,31 @@ enum INTERFACE : byte
 }
 ```
 
+### <a name="0x12e"></a>0x12e - Set wifi state
+
+Sent to a bulb to set a wireless interface's state.
+
+#### Payload (22 byte)
+
+```c
+payload
+{
+  INTERFACE interface;
+  WIFI_STATUS wifi_status; // Leave 0x00
+  byte ip4_address[4]
+  byte ip6_address[16];
+}
+
+enum INTERFACE : byte
+{
+  SOFT_AP = 1,
+  STATION = 2
+}
+```
+
 ### <a name="0x12f"></a>0x12f - Wifi state
 
-Received from a bulb after a request for its wifi state.
+Received from a bulb after a request for a wireless interface's state.
 
 #### Payload (22 bytes)
 
