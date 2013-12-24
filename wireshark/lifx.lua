@@ -114,6 +114,7 @@ end
 function analyse(buffer, pinfo, tree)
 	pinfo.cols.info = "LIFX"
 
+	-- LE maths on the packet length
 	local lifxlength = buffer(0,1):uint() + (buffer(1,1):uint() * 256)
 
 	local subtree = tree:add(buffer(0, lifxlength), "LIFX packet")
@@ -131,6 +132,7 @@ function analyse(buffer, pinfo, tree)
 	local pSubtree = subtree:add(buffer(36, lifxlength-36), "Payload")
 	packetTable:case(buffer(32,2):uint(), buffer(lifxlength-36), pinfo, pSubtree)
 
+	-- Check if there's another LIFX packet inside this TCP packet
 	if (lifxlength > 0 and buffer:len() > lifxlength) then
 		analyse(buffer(lifxlength), pinfo, tree)
 	end
