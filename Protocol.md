@@ -123,8 +123,8 @@ packet
  * 0x09 - Get dummy load - app to bulb
  * 0x0a - Set dummy load - app to bulb
  * 0x0b - Dummy load - bulb to app
- * 0x0c - Get mesh info - app to bulb
- * 0x0d - Mesh info - bulb to app
+ * [0x0c - Get mesh info](#0x0c) - app to bulb
+ * [0x0d - Mesh info](#0x0d) - bulb to app
  * [0x0e - Get mesh firmware](#0x0e) - app to bulb
  * [0x0f - Mesh firmware state](#0x0f) - bulb to app
  * 0x20 - Get version - app to bulb
@@ -244,6 +244,35 @@ enum RESET_SWITCH_POSITION: uint16
   DOWN = 1
 }
 
+```
+
+### <a name="0x0c"></a>0x0c - Get mesh info
+
+Sent to a bulb to retrieve wireless mesh info and other miscellany.
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x0d"></a>0x0d - Mesh info
+
+Received from a bulb after a request is made for its mesh info.
+
+#### Payload (14 bytes)
+
+```c
+payload
+{
+  float signal;
+  int tx;
+  int rx;
+  short mcu_temperature;
+}
 ```
 
 ### <a name="0x0e"></a>0x0e - Get mesh firmware
