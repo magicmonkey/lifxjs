@@ -76,7 +76,7 @@ packet
 
 ### Network management
  * [0x02 - Get PAN gateway](#0x02) - app to bulb
- * [0x03 - Device state response](#0x03) - bulb to app
+ * [0x03 - PAN gateway](#0x03) - bulb to app
 
 ### Power management
  * [0x14 - Get power state](#0x14) - app to bulb 
@@ -89,7 +89,7 @@ packet
  * [0x12 - Get wifi firmware state](#0x12) - app to bulb
  * [0x13 - Wifi firmware state](#0x13) - bulb to app
  * [0x12d - Get wifi state](#0x12d) - app to bulb
- * 0x12e - Set wifi state - app to bulb
+ * [0x12e - Set wifi state](#0x12e) - app to bulb
  * [0x12f - Wifi state](#0x12f) - bulb to app
  * [0x130 - Get access points](#0x130) - app to bulb
  * [0x131 - Set access point](#0x131) - app to bulb
@@ -100,9 +100,11 @@ packet
  * [0x18 - Set bulb label](#0x18) - app to bulb
  * [0x19 - Bulb label](#0x19) - bulb to app
  * [0x1a - Get tags](#0x1a) - app to bulb
+ * [0x1b - Set tags](#0x1b) - app to bulb
  * [0x1c - Tags](#0x1c) - bulb to app
- * 0x1d - Get tag labels [sic] - app to bulb
- * 0x1f - Tag labels [sic] - bulb to app
+ * [0x1d - Get tag labels](#0x1d) - app to bulb
+ * [0x1e - Set tag labels](#0x1e) - app to bulb
+ * [0x1f - Tag labels](#0x1f) - bulb to app
 
 ### Brightness and Colors
  * [0x65 - Get light state](#0x65) - app to bulb
@@ -123,25 +125,30 @@ packet
  * 0x09 - Get dummy load - app to bulb
  * 0x0a - Set dummy load - app to bulb
  * 0x0b - Dummy load - bulb to app
- * 0x0c - Get mesh info - app to bulb
- * 0x0d - Mesh info - bulb to app
- * 0x0e - Get mesh firmware - app to bulb
- * 0x0f - Mesh firmware state - bulb to app
- * 0x20 - Get version - app to bulb
- * 0x22 - Get info - app to bulb
- * 0x23 - Info - bulb to app
+ * [0x0c - Get mesh info](#0x0c) - app to bulb
+ * [0x0d - Mesh info](#0x0d) - bulb to app
+ * [0x0e - Get mesh firmware](#0x0e) - app to bulb
+ * [0x0f - Mesh firmware state](#0x0f) - bulb to app
+ * [0x20 - Get version](#0x20) - app to bulb
+ * [0x21 - Version state](#0x21) - bulb to app
+ * [0x22 - Get info](#0x22) - app to bulb
+ * [0x23 - Info](#0x23) - bulb to app
  * [0x24 - Get MCU rail voltage](#0x24) - app to bulb
  * [0x25 - MCU rail voltage](#0x25) - bulb to app
  * [0x26 - Reboot](#0x26) - app to bulb
+ * [0x27 - Set Factory Test Mode](#0x27) - app to bulb
+ * [0x28 - Disable Factory Test Mode](#0x28) - app to bulb
 
 ## Description of packet types
  
 ### <a name="0x02"></a>0x02 - Get PAN gateway
 
-This is the discovery packet, and is sent by the apps via UDP to the network
-broadcast address (either the LAN broadcast address or 255.255.255.255) on UDP
-port 56700.  It has all of the address fields (bytes 10-15 and 18-23) set to
-zeroes because it does not yet know about the gateway bulb.
+Sent to a network (UDP broadcast) or bulb (TCP direct) to retrieve its PAN
+gateway state.
+
+This packet is typically broadcast to discover gateway bulbs on the local
+network. (UDP datagram, port 56700.) As the destination bulb is unknown,
+the packet frame's address field is zeroed out.
 
 #### Payload (0 bytes)
 
@@ -153,22 +160,28 @@ payload {
 
 #### Subsequent actions
 
-Will hopefully cause a packet type 0x03 to be sent back; the apps should treat
-the originator of this response as the PAN gateway bulb for further
-communication.
+Will hopefully cause a packet type [0x03](#0x03) to be sent back;
+apps should treat the originator of this response as a PAN gateway bulb for
+further communication.
 
-### <a name="0x03"></a>0x03 - Device state response
+### <a name="0x03"></a>0x03 - PAN gateway state
 
-This is the response to the discovery packet, and is sent by the gateway bulb
-via UDP to port 56700 to the network broadcast address.  There will be one
-packet per PAN gateway on the network.
+Received from a gateway bulb after a request for its PAN gateway state
+(direct or broadcast). One packet describes one gateway bulb (i.e. you will
+receive a few of these packets).
 
-#### Payload (3 bytes)
+#### Payload (5 bytes)
 
 ```c
 payload {
-  uint8  unknown1;  // observed to be either 1 or 2
-  uint16 unknown2;  // observed to always be 0x7c 0xdd 0x00 0x00
+  SERVICE service;
+  uint32 port;
+}
+
+enum SERVICE : byte
+{
+  UDP = 1,
+  TCP = 2
 }
 ```
 
@@ -246,6 +259,73 @@ enum RESET_SWITCH_POSITION: uint16
 
 ```
 
+### <a name="0x0c"></a>0x0c - Get mesh info
+
+Sent to a bulb to retrieve wireless mesh info and other miscellany.
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x0d"></a>0x0d - Mesh info
+
+Received from a bulb after a request is made for its mesh info.
+
+#### Payload (14 bytes)
+
+```c
+payload
+{
+  float signal;
+  int tx;
+  int rx;
+  short mcu_temperature;
+}
+```
+
+### <a name="0x0e"></a>0x0e - Get mesh firmware
+
+Sent to a bulb to retrieve wireless mesh firmware state.
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x0f"></a>0x0f - Mesh firmware state
+
+Received from a bulb after a request is made for its firmware state.
+
+#### Payload (20 bytes)
+
+```c
+payload
+{
+  LIFX_TIMESTAMP build;
+  LIFX_TIMESTAMP install;
+  uint32 version;
+}
+
+struct LIFX_TIMESTAMP
+{
+  byte second;
+  byte minute;
+  byte hour;
+  byte day;
+  char month[3]; // ASCII encoded
+  byte year;
+}
+```
+
 ### <a name="0x10"></a>0x10 - Get wifi info
 
 Sent to a bulb to retrieve its wifi info.
@@ -268,10 +348,11 @@ Received from a bulb after a request is made for its wifi info.
 ```c
 payload
 {
-  byte unknown[14];
+  float signal;
+  int tx;
+  int rx;
+  short mcu_temperature;
 }
-
-// example: 23 95 85 36 00 00 00 00 15 05 00 00 00 00
 ```
 
 ### <a name="0x12"></a>0x12 - Get wifi firmware state
@@ -296,12 +377,20 @@ Received from a bulb after a request is made for its firmware [state? version?].
 ```c
 payload
 {
-  byte   unk1[16];
-  uint16 unk2;
-  uint16 unk3;
+  LIFX_TIMESTAMP build;
+  LIFX_TIMESTAMP install;
+  uint32 version;
 }
 
-// example: 05 0d 12 18 74 63 4f 0d 00 00 00 00 00 00 00 00 01 00 01 00
+struct LIFX_TIMESTAMP
+{
+  byte second;
+  byte minute;
+  byte hour;
+  byte day;
+  char month[3]; // ASCII encoded
+  byte year;
+}
 ```
 
 ### <a name="0x14"></a>0x14 - Get power state
@@ -416,6 +505,19 @@ payload
 }
 ```
 
+### <a name="0x1b"></a>0x1b - Set tags
+
+Sent to a bulb to set its tags.
+
+#### Payload (8 bytes)
+
+```c
+payload
+{
+  uint64 tags;
+}
+```
+
 ### <a name="0x1c"></a>0x1c - Tags
 
 Received from a bulb after a request for its tags.
@@ -429,6 +531,103 @@ payload
 }
 ```
 
+### <a name="0x1d"></a>0x1d - Get tag labels
+
+Sent to a bulb to request its tag labels.
+
+#### Payload (8 bytes)
+
+```c
+payload
+{
+  uint64 tags;
+}
+```
+
+### <a name="0x1e"></a>0x1e - Set tag labels
+
+Sent to a bulb to set its tag labels.
+
+#### Payload (40 bytes)
+
+```c
+payload
+{
+  uint64 tags;
+  char label[32]; // UTF-8 encoded string
+}
+```
+
+### <a name="0x1f"></a>0x1f - Tag labels
+
+Received from a bulb after a request for its tag labels.
+
+#### Payload (40 bytes)
+
+```c
+payload
+{
+  uint64 tags;
+  char label[32]; // UTF-8 encoded string
+}
+```
+
+
+### <a name="0x20"></a>0x20 - Get version
+
+Sent to a bulb to request its version state.
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x21"></a>0x21 - Version state
+
+Received from a bulb after a request for its version state.
+
+#### Payload (12 bytes)
+
+```c
+payload
+{
+  uint32 vendor;
+  uint32 product;
+  uint32 version;
+}
+```
+
+### <a name="0x22"></a>0x22 - Get info
+
+Sent to a bulb to request its [info?].
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
+### <a name="0x23"></a>0x23 - Info state
+
+Sent to a bulb to request its [info?] state.
+
+#### Payload (24 bytes)
+
+```c
+payload
+{
+  uint64 time;
+  uint64 uptime;
+  uint64 downtime;
+}
+```
 
 ### <a name="0x24"></a>0x24 - MCU rail voltage
 
@@ -470,6 +669,35 @@ payload
   // None
 }
 ```
+
+### <a name="0x27"></a>0x27 - Set Factory Test Mode
+
+Sent to a bulb to set its factory test mode. Unless you know what you're doing,
+we recommend you do not use this packet type. (You've been warned!)
+
+#### Payload (1 byte)
+
+```c
+payload
+{
+  byte on; // Unknown
+}
+```
+
+### <a name="0x28"></a>0x28 - Disable Factory Test Mode
+
+Sent to a bulb to disable its factory test mode. Unless you know what you're
+doing, we recommend you do not use this packet type. (You've been warned!)
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
 
 ### <a name="0x65"></a>0x65 - Get light state
 
@@ -580,7 +808,7 @@ payload {
 }
 ```
 
-### <a name="0x12d"></a>0x12d - Request wifi state
+### <a name="0x12d"></a>0x12d - Get wifi state
 
 Sent to a bulb to retrieve state on one of its wireless interfaces.
 
@@ -599,9 +827,31 @@ enum INTERFACE : byte
 }
 ```
 
+### <a name="0x12e"></a>0x12e - Set wifi state
+
+Sent to a bulb to set a wireless interface's state.
+
+#### Payload (22 byte)
+
+```c
+payload
+{
+  INTERFACE interface;
+  WIFI_STATUS wifi_status; // Leave 0x00
+  byte ip4_address[4]
+  byte ip6_address[16];
+}
+
+enum INTERFACE : byte
+{
+  SOFT_AP = 1,
+  STATION = 2
+}
+```
+
 ### <a name="0x12f"></a>0x12f - Wifi state
 
-Received from a bulb after a request for its wifi state.
+Received from a bulb after a request for a wireless interface's state.
 
 #### Payload (22 bytes)
 
