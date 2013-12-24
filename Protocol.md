@@ -100,9 +100,11 @@ packet
  * [0x18 - Set bulb label](#0x18) - app to bulb
  * [0x19 - Bulb label](#0x19) - bulb to app
  * [0x1a - Get tags](#0x1a) - app to bulb
+ * [0x1b - Set tags](#0x1b) - app to bulb
  * [0x1c - Tags](#0x1c) - bulb to app
- * [0x1d - Get tag labels (sic?)](#0x1d) - app to bulb
- * [0x1f - Tag labels (sic?)](#0x1f) - bulb to app
+ * [0x1d - Get tag labels](#0x1d) - app to bulb
+ * [0x1e - Set tag labels](#0x1e) - app to bulb
+ * [0x1f - Tag labels](#0x1f) - bulb to app
 
 ### Brightness and Colors
  * [0x65 - Get light state](#0x65) - app to bulb
@@ -134,6 +136,8 @@ packet
  * [0x24 - Get MCU rail voltage](#0x24) - app to bulb
  * [0x25 - MCU rail voltage](#0x25) - bulb to app
  * [0x26 - Reboot](#0x26) - app to bulb
+ * [0x27 - Set Factory Test Mode](#0x27) - app to bulb
+ * [0x28 - Disable Factory Test Mode](#0x28) - app to bulb
 
 ## Description of packet types
  
@@ -501,6 +505,19 @@ payload
 }
 ```
 
+### <a name="0x1b"></a>0x1b - Set tags
+
+Sent to a bulb to set its tags.
+
+#### Payload (8 bytes)
+
+```c
+payload
+{
+  uint64 tags;
+}
+```
+
 ### <a name="0x1c"></a>0x1c - Tags
 
 Received from a bulb after a request for its tags.
@@ -527,7 +544,21 @@ payload
 }
 ```
 
-### <a name="0x1e"></a>0x1e - Tag labels
+### <a name="0x1e"></a>0x1e - Set tag labels
+
+Sent to a bulb to set its tag labels.
+
+#### Payload (40 bytes)
+
+```c
+payload
+{
+  uint64 tags;
+  char label[32]; // UTF-8 encoded string
+}
+```
+
+### <a name="0x1f"></a>0x1f - Tag labels
 
 Received from a bulb after a request for its tag labels.
 
@@ -537,7 +568,7 @@ Received from a bulb after a request for its tag labels.
 payload
 {
   uint64 tags;
-  char label[32]; UTF-8 encoded string
+  char label[32]; // UTF-8 encoded string
 }
 ```
 
@@ -638,6 +669,35 @@ payload
   // None
 }
 ```
+
+### <a name="0x27"></a>0x27 - Set Factory Test Mode
+
+Sent to a bulb to set its factory test mode. Unless you know what you're doing,
+we recommend you do not use this packet type. (You've been warned!)
+
+#### Payload (1 byte)
+
+```c
+payload
+{
+  byte on; // Unknown
+}
+```
+
+### <a name="0x28"></a>0x28 - Disable Factory Test Mode
+
+Sent to a bulb to disable its factory test mode. Unless you know what you're
+doing, we recommend you do not use this packet type. (You've been warned!)
+
+#### Payload (0 bytes)
+
+```c
+payload
+{
+  // None
+}
+```
+
 
 ### <a name="0x65"></a>0x65 - Get light state
 
