@@ -616,7 +616,7 @@ payload
 
 ### <a name="0x23"></a>0x23 - Info state
 
-Sent to a bulb to request its [info?] state.
+Received from a bulb in response to a request for info state.
 
 #### Payload (24 bytes)
 
@@ -629,7 +629,7 @@ payload
 }
 ```
 
-### <a name="0x24"></a>0x24 - MCU rail voltage
+### <a name="0x24"></a>0x24 - Get MCU rail voltage
 
 Sent to a bulb to receive its microcontroller (MCU) rail voltage.
 
