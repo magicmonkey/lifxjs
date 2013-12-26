@@ -24,6 +24,40 @@ function Lifx() {
 }
 Lifx.prototype.__proto__ = events.EventEmitter.prototype;
 
+Lifx.prototype.startDiscovery = function() {
+	var self = this;
+	var UDPClient = dgram.createSocket("udp4");
+	UDPClient.unref(); // Stop this from preventing Node from ending
+
+	UDPClient.on("error", function (err) {
+		console.log("UDP error " + err);
+	});
+
+	UDPClient.on("message", function (msg, rinfo) {
+		//if (debug) console.log(" U- " + msg.toString("hex"));
+		var pkt = packet.fromBytes(msg);
+		if (pkt.packetTypeShortName == 'panGateway') {
+			var gw = new Gateway(rinfo.address, pkt.payload.port, pkt.preamble.site);
+			self.foundGateway(gw);
+		}
+	});
+
+	UDPClient.bind(port, "0.0.0.0", function() {
+		UDPClient.setBroadcast(true);
+		var intervalID;
+		// Now send the discovery packets
+//		self._intervalID = setInterval(function() {
+
+			var message = packet.fromParams({type:"getPanGateway", protocol:21504});
+
+			if (debug) console.log(" U+ " + message.toString("hex"));
+			UDPClient.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
+			});
+//		}, 1000);
+	});
+
+};
+
 Lifx.prototype.foundGateway = function(gw) {
 	var found = false;
 	for (var i in this.gateways) {
@@ -36,9 +70,8 @@ Lifx.prototype.foundGateway = function(gw) {
 		// Look for bulbs on this gateway
 		gw.connect();
 		gw.on('_packet', this._getPacketHandler());
-		this.on('packet',  this.packetHandler);
-		gw.findBulbs();
-		this.emit("gateway", gw);
+		//gw.findBulbs();
+		//this.emit("gateway", gw);
 	}
 };
 
@@ -51,10 +84,6 @@ Lifx.prototype._gotPacket = function(data, gw) {
 	if (debug) console.log(" T- " + data.toString("hex"));
 	var p = packet.fromBytes(data);
 	this.emit('packet', clone(p));
-};
-
-Lifx.prototype.packetHandler = function(packet) {
-	console.log(packet.packetTypeName);
 };
 
 Lifx.prototype._gotPacket_old = function(data, gw) {
@@ -117,39 +146,6 @@ Lifx.prototype.foundBulb = function(data, gw) {
 	this.emit('bulbstate', clone(state));
 };
 
-Lifx.prototype.startDiscovery = function() {
-	var self = this;
-	var UDPClient = dgram.createSocket("udp4");
-	UDPClient.unref(); // Stop this from preventing Node from ending
-
-	UDPClient.on("error", function (err) {
-		console.log("UDP error " + err);
-	});
-
-	UDPClient.on("message", function (msg, rinfo) {
-		if (debug) console.log(" U- " + msg.toString("hex"));
-		var gwBulb = msg.slice(16, 22);
-		if (msg.length > 4 && msg[3] == 0x54 && msg[32] == 0x03) {
-			self.foundGateway(new Gateway({address:rinfo.address, port:rinfo.port, family:rinfo.family, gwBulb:gwBulb}));
-		}
-	});
-
-	UDPClient.bind(port, "0.0.0.0", function() {
-		UDPClient.setBroadcast(true);
-		var intervalID;
-		// Now send the discovery packets
-		self._intervalID = setInterval(function() {
-
-			var message = packet.fromParams({type:"getPanGateway"});
-
-			if (debug) console.log(" U+ " + message.toString("hex"));
-			UDPClient.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
-			});
-		}, 1000);
-	});
-
-};
-
 // This represents each individual bulb
 function Bulb(_lifxAddress, _name) {
 	this.lifxAddress = _lifxAddress;
@@ -157,10 +153,10 @@ function Bulb(_lifxAddress, _name) {
 }
 
 // This represents the gateway, and its respective functions (eg discovery, send-to-all etc)
-function Gateway(addr) {
+function Gateway(ipAddress, port, site) {
 	// TODO: validation...
-	this.ipAddress = {ip:addr.address, port:addr.port, family:addr.family};
-	this.lifxAddress = addr.gwBulb;
+	this.ipAddress = {ip:ipAddress, port:port};
+	this.lifxAddress = site;
 	this.tcpClient = null;
 	this.reconnect = true;
 	events.EventEmitter.call(this);
@@ -183,13 +179,9 @@ Lifx.prototype.getBulbByLifxAddress = function(lifxAddress) {
 };
 
 // Open a control connection (over TCP) to the gateway node
-Gateway.prototype.connect = function(cb) {
+Gateway.prototype.connect = function() {
 	var self = this;
-	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip, function() { //'connect' listener
-		if (typeof cb == 'function') {
-			cb();
-		}
-	});
+	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip);
 	this.tcpClient.on('data', function(data) {
 		self.emit('_packet', data, self);
 	});
@@ -210,44 +202,13 @@ Lifx.prototype.findBulbs = function() {
 
 // This method requests that the gateway tells about all of its bulbs
 Gateway.prototype.findBulbs = function() {
-	//this.sendToAll(new Buffer([0x65, 0x00, 0x00, 0x00]));
-	this.sendToAll(packet.fromParams({type:'getLightState'}));
+	this.send(packet.fromParams({type:'getLightState'}));
 };
 
 // Send a raw command - targetAddr should be a buffer containing an 8-byte address.  Use zeroes to send to all bulbs.
-Gateway.prototype.send = function(message, targetAddr) {
-	var standardPrefix = new Buffer([0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-	// Splice in the address of our discovered gateway bulb to replace these bytes --------------------------------------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	// Splice in the address of this bulb to replace these bytes --------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	this.lifxAddress.copy(standardPrefix, 15);
-	targetAddr.copy(standardPrefix, 7);
-
-	var bLen = new Buffer([message.length + standardPrefix.length + 1]);
-	var sendBuf = Buffer.concat([
-		bLen,
-		standardPrefix,
-		message
-	]);
-	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
+Gateway.prototype.send = function(sendBuf) {
+	if (true||debug) console.log(" T+ " + sendBuf.toString("hex"));
 	this.tcpClient.write(sendBuf);
-};
-
-// Send a raw command to an individual bulb
-Gateway.prototype.sendToOne = function(message, bulb) {
-	var targetAddr;
-	if (typeof bulb.lifxAddress == 'undefined') {
-		// No idea what we've been passed as a bulb.  Erm.
-		throw "Unknown thing been passed instead of a bulb: " + util.inspect(bulb);
-	}
-	targetAddr = bulb.lifxAddress;
-	this.send(message, targetAddr);
-};
-
-// Send a raw command to all bulbs attached to this gateway
-Gateway.prototype.sendToAll = function(message) {
-	var targetAddr = new Buffer(8);
-	targetAddr.fill(0);
-	this.send(message, targetAddr);
 };
 
 // Close the connection to this gateway
@@ -273,10 +234,13 @@ Lifx.prototype.sendToOne = function(command, bulb) {
 
 Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 	this.gateways.forEach(function(g) {
+		var siteAddress = g.lifxAddress;
+		siteAddress.copy(command, 16);
 		if (typeof bulb == 'undefined') {
-			g.sendToAll(command);
+			g.send(command);
 		} else {
-			g.sendToOne(command, bulb);
+			// Overwrite the targetMac here
+			g.send(command);
 		}
 	});
 };
@@ -285,12 +249,12 @@ Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 
 // Turn all lights on
 Lifx.prototype.lightsOn = function(bulb) {
-	this._sendToOneOrAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x01, 0x00]), bulb);
+	this._sendToOneOrAll(packet.fromParams({type:"setPowerState", onoff:1}), bulb);
 };
 
 // Turn all lights off
 Lifx.prototype.lightsOff = function(bulb) {
-	this._sendToOneOrAll(new Buffer([0x15, 0x00, 0x00, 0x00, 0x00, 0x00]), bulb);
+	this._sendToOneOrAll(packet.fromParams({type:"setPowerState", onoff:0}), bulb);
 };
 
 // Set all bulbs to a particular colour

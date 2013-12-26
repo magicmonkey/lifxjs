@@ -3,26 +3,26 @@ function packet() {
 }
 
 packet.fromBytes = function(b) {
-	var newPacket = {};
+	var newPacket = {preamble:{}, payload:{}};
 
 	// First parse the preamble
 	var runningPlace = 0;
 	for (var i=0; i<preambleFields.length; i++) {
 		var f = preambleFields[i];
-		newPacket[f.name] = f.type.parse(b, runningPlace);
+		newPacket.preamble[f.name] = f.type.parse(b, runningPlace);
 		runningPlace += f.type.size;
 	}
 
 	// Now parse the packet-specific bytes
-	var pParser = packets[newPacket.packetType];
+	var pParser = packets[newPacket.preamble.packetType];
 	if (typeof pParser == 'undefined') {
-		console.log("Unknown packet type "+newPacket.packetType);
+		console.log("Unknown packet type "+newPacket.preamble.packetType);
 	} else {
 		newPacket.packetTypeName = pParser.name;
 		newPacket.packetTypeShortName = pParser.shortname;
 		for (var i=0; i<pParser.fields.length; i++) {
 			var f = pParser.fields[i];
-			newPacket[f.name] = f.type.parse(b, runningPlace);
+			newPacket.payload[f.name] = f.type.parse(b, runningPlace);
 			runningPlace += f.type.size;
 		}
 	}
@@ -67,7 +67,11 @@ packet.fromParams = function(p) {
 				datum = 36 + pParser.length;
 				break;
 			case 'protocol':
-				datum = 21504;
+				if (typeof p[f.name] == 'undefined') {
+					datum = 13312;
+				} else {
+					datum = p[f.name];
+				}
 				break;
 			case 'targetMacAddress':
 			case 'site':
@@ -103,6 +107,15 @@ type = {
 		},
 		unparse: function(b, start, p) {
 			return b.writeUInt8(p, start);
+		}
+	},
+	uint16: {
+		size: 2,
+		parse: function(b, start) {
+			return b.readUInt16BE(start);
+		},
+		unparse: function(b, start, p) {
+			return b.writeUInt16BE(p, start);
 		}
 	},
 	uint16_le: {
@@ -142,14 +155,14 @@ type = {
 			return p.copy(b, start, 0, 8);
 		}
 	},
-	float: {
+	float_le: {
 		size: 4,
 		parse: function(b, start) {
 			var size = 4;
-			return b.readFloatBE(start);
+			return b.readFloatLE(start);
 		},
 		unparse: function(b, start, p) {
-			return b.writeFloatBE(p, start);
+			return b.writeFloatLE(p, start);
 		}
 	},
 	byte2: {
@@ -162,14 +175,15 @@ type = {
 			return p.copy(b, start, 0, 2);
 		}
 	},
-	byte3: {
+	string3: {
 		size: 3,
 		parse: function(b, start) {
 			var size = 3;
-			return b.slice(start, start+size);
+			return b.slice(start, start+size).toString().replace(/\0*$/, '');
 		},
 		unparse: function(b, start, p) {
-			return p.copy(b, start, 0, 3);
+			var b2 = new Buffer(p);
+			return b2.copy(b, start, 0, 3);
 		}
 	},
 	byte4: {
@@ -190,6 +204,16 @@ type = {
 		},
 		unparse: function(b, start, p) {
 			return p.copy(b, start, 0, 6);
+		}
+	},
+	byte16: {
+		size: 16,
+		parse: function(b, start) {
+			var size = 16;
+			return b.slice(start, start+size);
+		},
+		unparse: function(b, start, p) {
+			return p.copy(b, start, 0, 16);
 		}
 	},
 	byte32: {
@@ -291,9 +315,9 @@ packets = {
 		shortname:"meshInfo",
 		length:14,
 		fields:[
-			{name:"signal"        , type:type.float} ,
-			{name:"tx"            , type:type.uint32},
-			{name:"rx"            , type:type.uint32},
+			{name:"signal"        , type:type.float_le} ,
+			{name:"tx"            , type:type.uint32_le},
+			{name:"rx"            , type:type.uint32_le},
 			{name:"mcuTemperature", type:type.uint16}
 		]
 	},
@@ -320,23 +344,29 @@ packets = {
 			{name:"install_day"   , type:type.uint8},
 			{name:"install_month" , type:type.byte3},
 			{name:"install_year"  , type:type.uint8},
-			{name:"version"       , type:type.uint32}
+			{name:"version"       , type:type.uint32_le}
 		]
+	},
+	0x10: {
+		name:"Get wifi info",
+		shortname:"getWifiInfo",
+		length:0,
+		fields:[]
 	},
 	0x11: {
 		name:"Wifi info",
 		shortname:"wifiInfo",
 		length:14,
 		fields:[
-			{name:"signal"        , type:type.float} ,
-			{name:"tx"            , type:type.uint32},
-			{name:"rx"            , type:type.uint32},
+			{name:"signal"        , type:type.float_le} ,
+			{name:"tx"            , type:type.uint32_le},
+			{name:"rx"            , type:type.uint32_le},
 			{name:"mcuTemperature", type:type.uint16}
 		]
 	},
 	0x12: {
-		name:"Get firmware state",
-		shortname:"getFirmwareState",
+		name:"Get wifi firmware state",
+		shortname:"getWifiFirmwareState",
 		length:0,
 		fields:[]
 	},
@@ -349,15 +379,15 @@ packets = {
 			{name:"build_minute"  , type:type.uint8},
 			{name:"build_hour"    , type:type.uint8},
 			{name:"build_day"     , type:type.uint8},
-			{name:"build_month"   , type:type.byte3},
+			{name:"build_month"   , type:type.string3},
 			{name:"build_year"    , type:type.uint8},
 			{name:"install_second", type:type.uint8},
 			{name:"install_minute", type:type.uint8},
 			{name:"install_hour"  , type:type.uint8},
 			{name:"install_day"   , type:type.uint8},
-			{name:"install_month" , type:type.byte3},
+			{name:"install_month" , type:type.string3},
 			{name:"install_year"  , type:type.uint8},
-			{name:"version"       , type:type.uint32}
+			{name:"version"       , type:type.uint32_le}
 		]
 	},
 	0x14: {
@@ -495,7 +525,7 @@ packets = {
 		shortname:"mcuRailVoltage",
 		length:4,
 		fields:[
-			{name:"voltage", type:type.uint32},
+			{name:"voltage", type:type.uint32_le},
 		]
 	},
 	0x26: {
@@ -597,7 +627,7 @@ packets = {
 	},
 	0x12e: {
 		name:"Set wifi state",
-		shortname:"getWifiState",
+		shortname:"setWifiState",
 		length:22,
 		fields:[
 			{name:"interface", type:type.uint8},

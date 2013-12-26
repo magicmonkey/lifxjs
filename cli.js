@@ -1,7 +1,8 @@
 var lifx = require('./lifx');
 var util = require('util');
+var packet = require('./packet');
 
-lifx.setDebug(true);
+lifx.setDebug(false);
 
 var lx = lifx.init();
 
@@ -19,6 +20,10 @@ lx.on('bulb', function(b) {
 
 lx.on('gateway', function(g) {
 	console.log('New gateway found: ' + g.ipAddress.ip);
+});
+
+lx.on('packet', function(p) {
+	console.log(p.packetTypeName + " - " + p.preamble.targetMacAddress.toString('hex') + " - " + util.inspect(p.payload));
 });
 
 console.log("Keys:");
@@ -89,9 +94,44 @@ stdin.on('data', function (key) {
 			break;
 
 		case 0x61: // a
-			console.log("Requesting time");
-			//lx.findBulbs();
-			var message = new Buffer([0x04, 0x00, 0x00, 0x00]);
+			console.log("Requesting voltage");
+			var message = packet.fromParams({type:"getMcuRailVoltage"});
+			lx.sendToAll(message);
+			break;
+
+		case 0x62: // b
+			console.log("Requesting power state");
+			var message = packet.fromParams({type:"getPowerState"});
+			lx.sendToAll(message);
+			break;
+
+		case 0x63: // c
+			console.log("Requesting wifi info");
+			var message = packet.fromParams({type:"getWifiInfo"});
+			lx.sendToAll(message);
+			break;
+
+		case 0x64: // d
+			console.log("Requesting wifi firmware state");
+			var message = packet.fromParams({type:"getWifiFirmwareState"});
+			lx.sendToAll(message);
+			break;
+
+		case 0x65: // e
+			console.log("Requesting wifi state");
+			var message = packet.fromParams({type:"getWifiState", interface:2});
+			lx.sendToAll(message);
+			break;
+
+		case 0x66: // f
+			console.log("Requesting bulb label");
+			var message = packet.fromParams({type:"getBulbLabel"});
+			lx.sendToAll(message);
+			break;
+
+		case 0x67: // g
+			console.log("Requesting tags");
+			var message = packet.fromParams({type:"getTags"});
 			lx.sendToAll(message);
 			break;
 
