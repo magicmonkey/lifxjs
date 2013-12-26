@@ -4,6 +4,8 @@ var util = require('util');
 var events = require('events');
 var clone = require('clone');
 
+var packet = require('./packet');
+
 var port = 56700;
 
 var debug = false;
@@ -34,6 +36,7 @@ Lifx.prototype.foundGateway = function(gw) {
 		// Look for bulbs on this gateway
 		gw.connect();
 		gw.on('_packet', this._getPacketHandler());
+		this.on('packet',  this.packetHandler);
 		gw.findBulbs();
 		this.emit("gateway", gw);
 	}
@@ -45,6 +48,16 @@ Lifx.prototype._getPacketHandler = function() {
 };
 
 Lifx.prototype._gotPacket = function(data, gw) {
+	if (debug) console.log(" T- " + data.toString("hex"));
+	var p = packet.fromBytes(data);
+	this.emit('packet', clone(p));
+};
+
+Lifx.prototype.packetHandler = function(packet) {
+	console.log(packet.packetTypeName);
+};
+
+Lifx.prototype._gotPacket_old = function(data, gw) {
 	if (debug) console.log(" T- " + data.toString("hex"));
 
 	switch (data[32]) {
@@ -126,7 +139,9 @@ Lifx.prototype.startDiscovery = function() {
 		var intervalID;
 		// Now send the discovery packets
 		self._intervalID = setInterval(function() {
-			var message = new Buffer([0x24, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00]);
+
+			var message = packet.fromParams({type:"getPanGateway"});
+
 			if (debug) console.log(" U+ " + message.toString("hex"));
 			UDPClient.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
 			});
@@ -195,7 +210,8 @@ Lifx.prototype.findBulbs = function() {
 
 // This method requests that the gateway tells about all of its bulbs
 Gateway.prototype.findBulbs = function() {
-	this.sendToAll(new Buffer([0x65, 0x00, 0x00, 0x00]));
+	//this.sendToAll(new Buffer([0x65, 0x00, 0x00, 0x00]));
+	this.sendToAll(packet.fromParams({type:'getLightState'}));
 };
 
 // Send a raw command - targetAddr should be a buffer containing an 8-byte address.  Use zeroes to send to all bulbs.

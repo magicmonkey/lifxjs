@@ -1,7 +1,7 @@
 var lifx = require('./lifx');
 var util = require('util');
 
-lifx.setDebug(false);
+lifx.setDebug(true);
 
 var lx = lifx.init();
 
@@ -89,8 +89,10 @@ stdin.on('data', function (key) {
 			break;
 
 		case 0x61: // a
-			console.log("Requesting info");
-			lx.findBulbs();
+			console.log("Requesting time");
+			//lx.findBulbs();
+			var message = new Buffer([0x04, 0x00, 0x00, 0x00]);
+			lx.sendToAll(message);
 			break;
 
 		case 0x03: // ctrl-c
