@@ -1,24 +1,51 @@
 var lifx = require('./lifx');
 var util = require('util');
+var packet = require('./packet');
 
 lifx.setDebug(false);
 
 var lx = lifx.init();
 
 lx.on('bulbstate', function(b) {
-	//console.log('Bulb state: ' + util.inspect(b));
+	console.log('Bulb state: ' + util.inspect(b));
 });
 
 lx.on('bulbonoff', function(b) {
-	//console.log('Bulb on/off: ' + util.inspect(b));
+	console.log('Bulb on/off: ' + util.inspect(b));
 });
 
 lx.on('bulb', function(b) {
-	//console.log('New bulb found: ' + b.name);
+	console.log('New bulb found: ' + b.name);
 });
 
 lx.on('gateway', function(g) {
 	console.log('New gateway found: ' + g.ipAddress.ip);
+});
+
+lx.on('packet', function(p) {
+	// Show informational packets
+	switch (p.packetTypeShortName) {
+		case 'powerState':
+		case 'wifiInfo':
+		case 'wifiFirmwareState':
+		case 'wifiState':
+		case 'accessPoint':
+		case 'bulbLabel':
+		case 'tags':
+		case 'tagLabels':
+		//case 'lightStatus':
+		case 'timeState':
+		case 'resetSwitchState':
+		case 'meshInfo':
+		case 'meshFirmwareState':
+		case 'versionState':
+		case 'infoState':
+		case 'mcuRailVoltage':
+			console.log(p.packetTypeName + " - " + p.preamble.bulbAddress.toString('hex') + " - " + util.inspect(p.payload));
+			break;
+		default:
+			break;
+	}
 });
 
 console.log("Keys:");
@@ -31,7 +58,7 @@ console.log("Press 6 to cycle forwards through colours");
 console.log("Press 7 to cycle backwards through colours");
 console.log("Press 8 to show debug messages including network traffic");
 console.log("Press 9 to hide debug messages including network traffic");
-//console.log("Press a to request an info update from the lights");
+console.log("Press letters a-i to request various status fields");
 
 var stdin = process.openStdin();
 process.stdin.setRawMode(true);
@@ -55,12 +82,14 @@ stdin.on('data', function (key) {
 
 		case 0x33: // 3
 			console.log("Dim red");
-			lx.lightsColour(0x0000, 0xffff, 0x0200, 0x0dac, 500);
+			// BB8 7D0
+			lx.lightsColour(0x0000, 0xffff, 1000, 0, 0);
 			break;
 
 		case 0x34: // 4
 			console.log("Dim purple");
-			lx.lightsColour(0xcc15, 0xffff, 0x0200, 0x0dac, 500);
+			//lx.lightsColour(0x0000, 0xffff, 500, 0, 0);
+			lx.lightsColour(0xcc15, 0xffff, 500, 0, 0);
 			break;
 
 		case 0x35: // 5
@@ -89,8 +118,51 @@ stdin.on('data', function (key) {
 			break;
 
 		case 0x61: // a
-			console.log("Requesting info");
-			lx.findBulbs();
+			console.log("Requesting voltage");
+			var message = packet.getMcuRailVoltage();
+			lx.sendToAll(message);
+			break;
+
+		case 0x62: // b
+			console.log("Requesting power state");
+			var message = packet.getPowerState();
+			lx.sendToAll(message);
+			break;
+
+		case 0x63: // c
+			console.log("Requesting wifi info");
+			var message = packet.getWifiInfo();
+			lx.sendToAll(message);
+			break;
+
+		case 0x64: // d
+			console.log("Requesting wifi firmware state");
+			var message = packet.getWifiFirmwareState();
+			lx.sendToAll(message);
+			break;
+
+		case 0x65: // e
+			console.log("Requesting wifi state");
+			var message = packet.getWifiState({interface:2});
+			lx.sendToAll(message);
+			break;
+
+		case 0x66: // f
+			console.log("Requesting bulb label");
+			var message = packet.getBulbLabel();
+			lx.sendToAll(message);
+			break;
+
+		case 0x67: // g
+			console.log("Requesting tags");
+			var message = packet.getTags();
+			lx.sendToAll(message);
+			break;
+
+		case 0x68: // h
+			console.log("Requesting tag label for tag 1");
+			var message = packet.getTagLabels({tags:new Buffer([1,0,0,0,0,0,0,0])});
+			lx.sendToAll(message);
 			break;
 
 		case 0x03: // ctrl-c
