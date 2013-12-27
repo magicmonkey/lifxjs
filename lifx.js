@@ -121,21 +121,22 @@ Lifx.prototype.foundBulb = function(bulb, gw) {
 	var lifxAddress = bulb.preamble.bulbAddress;
 	if (debug) console.log(" * Found a bulb: " + bulbName + " (address " + util.inspect(lifxAddress) + ")");
 
-	var found = false;
+	var foundBulb = null;
 	for (var bulbId in this.bulbs) {
 		if (this.bulbs[bulbId].lifxAddress.toString("hex") == lifxAddress.toString("hex")) {
-			found = true;
+			foundBulb = this.bulbs[bulbId];
 		}
 	}
 
-	if (!found) {
+	if (!foundBulb) {
 		var newBulb = new Bulb(lifxAddress, bulbName);
 		if (debug) console.log("*** New bulb found (" + newBulb.name + ") by gateway " + gw.ipAddress.ip + " ***");
 		this.bulbs.push(newBulb);
 		this.emit('bulb', clone(newBulb));
+		foundBulb = newBulb;
 	}
 
-	this.emit('bulbstate', bulb.payload);
+	this.emit('bulbstate', {bulb:foundBulb, state:bulb.payload});
 };
 
 // This represents each individual bulb
