@@ -48,7 +48,7 @@ Lifx.prototype.startDiscovery = function() {
 		// Now send the discovery packets
 //		self._intervalID = setInterval(function() {
 
-			var message = packet.fromParams({type:"getPanGateway", protocol:21504});
+			var message = packet.getPanGateway({protocol:21504});
 
 			if (debug) console.log(" U+ " + message.toString("hex"));
 			UDPClient.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
@@ -181,9 +181,13 @@ Lifx.prototype.getBulbByLifxAddress = function(lifxAddress) {
 // Open a control connection (over TCP) to the gateway node
 Gateway.prototype.connect = function() {
 	var self = this;
+	console.log("Connecting to " + this.ipAddress.ip + ":" + this.ipAddress.port);
 	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip);
 	this.tcpClient.on('data', function(data) {
 		self.emit('_packet', data, self);
+	});
+	this.tcpClient.on('error', function(err) {
+		console.log(err);
 	});
 	this.tcpClient.on('end', function() {
 		console.log('TCP client disconnected');
@@ -202,12 +206,12 @@ Lifx.prototype.findBulbs = function() {
 
 // This method requests that the gateway tells about all of its bulbs
 Gateway.prototype.findBulbs = function() {
-	this.send(packet.fromParams({type:'getLightState'}));
+	this.send(packet.getLightState());
 };
 
 // Send a raw command - targetAddr should be a buffer containing an 8-byte address.  Use zeroes to send to all bulbs.
 Gateway.prototype.send = function(sendBuf) {
-	if (true||debug) console.log(" T+ " + sendBuf.toString("hex"));
+	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
 	this.tcpClient.write(sendBuf);
 };
 
@@ -249,31 +253,19 @@ Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 
 // Turn all lights on
 Lifx.prototype.lightsOn = function(bulb) {
-	this._sendToOneOrAll(packet.fromParams({type:"setPowerState", onoff:1}), bulb);
+	this._sendToOneOrAll(packet.setPowerState({onoff:1}), bulb);
 };
 
 // Turn all lights off
 Lifx.prototype.lightsOff = function(bulb) {
-	this._sendToOneOrAll(packet.fromParams({type:"setPowerState", onoff:0}), bulb);
+	this._sendToOneOrAll(packet.setPowerState({onoff:0}), bulb);
 };
 
 // Set all bulbs to a particular colour
 // Pass in 16-bit numbers for each param - they will be byte shuffled as appropriate
 Lifx.prototype.lightsColour = function(hue, sat, lum, whitecol, timing, bulb) {
-	var message = new Buffer([0x66, 0x00, 0x00, 0x00, 0x00, 0x9e, 0xd4, 0xff, 0xff, 0x30, 0x00, 0xac, 0x0d, 0x13, 0x05, 0x00, 0x00]);
-	//                                                      ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^
-	//                                                         hue      saturation  luminance  white colour   timing
-	message[5]  = (hue & 0x00ff);
-	message[6]  = (hue & 0xff00) >> 8;
-	message[7]  = (sat & 0x00ff);
-	message[8]  = (sat & 0xff00) >> 8;
-	message[9]  = (lum & 0x00ff);
-	message[10] = (lum & 0xff00) >> 8;
-	message[11] = (whitecol & 0x00ff);
-	message[12] = (whitecol & 0xff00) >> 8;
-	message[13] = (timing & 0x00ff);
-	message[14] = (timing & 0xff00) >> 8;
-
+	var params = {stream:0, hue:hue, saturation:sat, brightness:lum, kelvin:whitecol, fadeTime:timing};
+	var message = packet.setLightColour(params);
 	this._sendToOneOrAll(message, bulb);
 };
 

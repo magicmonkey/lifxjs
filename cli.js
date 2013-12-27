@@ -60,12 +60,14 @@ stdin.on('data', function (key) {
 
 		case 0x33: // 3
 			console.log("Dim red");
-			lx.lightsColour(0x0000, 0xffff, 0x0200, 0x0dac, 500);
+			// BB8 7D0
+			lx.lightsColour(0x0000, 0xffff, 1000, 0, 0);
 			break;
 
 		case 0x34: // 4
 			console.log("Dim purple");
-			lx.lightsColour(0xcc15, 0xffff, 0x0200, 0x0dac, 500);
+			//lx.lightsColour(0x0000, 0xffff, 500, 0, 0);
+			lx.lightsColour(0xcc15, 0xffff, 500, 0, 0);
 			break;
 
 		case 0x35: // 5
@@ -95,43 +97,43 @@ stdin.on('data', function (key) {
 
 		case 0x61: // a
 			console.log("Requesting voltage");
-			var message = packet.fromParams({type:"getMcuRailVoltage"});
+			var message = packet.getMcuRailVoltage();
 			lx.sendToAll(message);
 			break;
 
 		case 0x62: // b
 			console.log("Requesting power state");
-			var message = packet.fromParams({type:"getPowerState"});
+			var message = packet.getPowerState();
 			lx.sendToAll(message);
 			break;
 
 		case 0x63: // c
 			console.log("Requesting wifi info");
-			var message = packet.fromParams({type:"getWifiInfo"});
+			var message = packet.getWifiInfo();
 			lx.sendToAll(message);
 			break;
 
 		case 0x64: // d
 			console.log("Requesting wifi firmware state");
-			var message = packet.fromParams({type:"getWifiFirmwareState"});
+			var message = packet.getWifiFirmwareState();
 			lx.sendToAll(message);
 			break;
 
 		case 0x65: // e
 			console.log("Requesting wifi state");
-			var message = packet.fromParams({type:"getWifiState", interface:2});
+			var message = packet.getWifiState({interface:2});
 			lx.sendToAll(message);
 			break;
 
 		case 0x66: // f
 			console.log("Requesting bulb label");
-			var message = packet.fromParams({type:"getBulbLabel"});
+			var message = packet.getBulbLabel();
 			lx.sendToAll(message);
 			break;
 
 		case 0x67: // g
 			console.log("Requesting tags");
-			var message = packet.fromParams({type:"getTags"});
+			var message = packet.getTags();
 			lx.sendToAll(message);
 			break;
 

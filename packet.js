@@ -1,5 +1,19 @@
+packet = {
+}
 
-function packet() {
+packet.polyfill = function() {
+	for (var i in packets) {
+		var pkt = packets[i];
+		packet[pkt.shortname] = function(pkt) {
+			return function(p) {
+				if (typeof p != 'object') {
+					p = {};
+				}
+				p.type = pkt.shortname;
+				return packet.fromParams(p);
+			};
+		}(pkt);
+	}
 }
 
 packet.fromBytes = function(b) {
@@ -37,7 +51,6 @@ packet.fromParams = function(p) {
 		return;
 	}
 
-	console.log("Looking for packet type "+p.type);
 	var pParser;
 	for (var i in packets) {
 		if (packets[i].shortname == p.type) {
@@ -53,8 +66,8 @@ packet.fromParams = function(p) {
 	// Generate packet-specific data
 	var runningPlace = 0;
 	for (var i=0; i<pParser.fields.length; i++) {
-		console.log("Unparsing type "+pParser.fields[i].name);
 		pParser.fields[i].type.unparse(newPacketPayload, runningPlace, p[pParser.fields[i].name]);
+		runningPlace += pParser.fields[i].type.size;
 	}
 	
 	// Generate preamble
@@ -677,6 +690,8 @@ packets = {
 		]
 	},
 };
+
+packet.polyfill();
 
 module.exports = packet;
 
