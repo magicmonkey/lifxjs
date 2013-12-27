@@ -7,11 +7,11 @@ lifx.setDebug(false);
 var lx = lifx.init();
 
 lx.on('bulbstate', function(b) {
-	console.log('Bulb state: ' + util.inspect(b));
+	//console.log('Bulb state: ' + util.inspect(b));
 });
 
 lx.on('bulbonoff', function(b) {
-	console.log('Bulb on/off: ' + util.inspect(b));
+	//console.log('Bulb on/off: ' + util.inspect(b));
 });
 
 lx.on('bulb', function(b) {
@@ -37,7 +37,7 @@ lx.on('packet', function(p) {
 		case 'timeState':
 		case 'resetSwitchState':
 		case 'meshInfo':
-		case 'meshFirmwareState':
+		case 'meshFirmware':
 		case 'versionState':
 		case 'infoState':
 		case 'mcuRailVoltage':
@@ -58,7 +58,7 @@ console.log("Press 6 to cycle forwards through colours");
 console.log("Press 7 to cycle backwards through colours");
 console.log("Press 8 to show debug messages including network traffic");
 console.log("Press 9 to hide debug messages including network traffic");
-console.log("Press letters a-i to request various status fields");
+console.log("Press letters a-m to request various status fields");
 
 var stdin = process.openStdin();
 process.stdin.setRawMode(true);
@@ -162,6 +162,36 @@ stdin.on('data', function (key) {
 		case 0x68: // h
 			console.log("Requesting tag label for tag 1");
 			var message = packet.getTagLabels({tags:new Buffer([1,0,0,0,0,0,0,0])});
+			lx.sendToAll(message);
+			break;
+
+		case 0x69: // i
+			console.log("Requesting time");
+			var message = packet.getTime();
+			lx.sendToAll(message);
+			break;
+
+		case 0x6a: // j
+			console.log("Requesting info");
+			var message = packet.getInfo();
+			lx.sendToAll(message);
+			break;
+
+		case 0x6b: // k
+			console.log("Requesting reset switch state");
+			var message = packet.getResetSwitchState();
+			lx.sendToAll(message);
+			break;
+
+		case 0x6c: // l
+			console.log("Requesting mesh info");
+			var message = packet.getMeshInfo();
+			lx.sendToAll(message);
+			break;
+
+		case 0x6d: // m
+			console.log("Requesting mesh firmware");
+			var message = packet.getMeshFirmware();
 			lx.sendToAll(message);
 			break;
 
