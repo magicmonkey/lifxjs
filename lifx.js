@@ -173,7 +173,7 @@ Lifx.prototype.getBulbByLifxAddress = function(lifxAddress) {
 // Open a control connection (over TCP) to the gateway node
 Gateway.prototype.connect = function() {
 	var self = this;
-	console.log("Connecting to " + this.ipAddress.ip + ":" + this.ipAddress.port);
+	if (debug) console.log("Connecting to " + this.ipAddress.ip + ":" + this.ipAddress.port);
 	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip);
 	this.tcpClient.on('data', function(data) {
 		self.emit('_packet', data, self);
@@ -272,9 +272,9 @@ Lifx.prototype.lightsColour = function(hue, sat, lum, whitecol, timing, bulb) {
 	this._sendToOneOrAll(message, bulb);
 };
 
-// Request status from bulb(s)
-Lifx.prototype.requestStatus = function(bulb) {
-	this._sendToOneOrAll(new Buffer([0x65, 0x00, 0x00, 0x00]), bulb);
+// Request status from bulbs
+Lifx.prototype.requestStatus = function() {
+	this._sendToOneOrAll(packet.getLightState());
 };
 
 module.exports = {

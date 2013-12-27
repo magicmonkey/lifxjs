@@ -7,15 +7,15 @@ lifx.setDebug(false);
 var lx = lifx.init();
 
 lx.on('bulbstate', function(b) {
-	//console.log('Bulb state: ' + util.inspect(b));
+	console.log('Bulb state: ' + util.inspect(b));
 });
 
 lx.on('bulbonoff', function(b) {
-	//console.log('Bulb on/off: ' + util.inspect(b));
+	console.log('Bulb on/off: ' + util.inspect(b));
 });
 
 lx.on('bulb', function(b) {
-	console.log('New bulb found: ' + util.inspect(b));
+	console.log('New bulb found: ' + b.name);
 });
 
 lx.on('gateway', function(g) {
@@ -33,7 +33,7 @@ lx.on('packet', function(p) {
 		case 'bulbLabel':
 		case 'tags':
 		case 'tagLabels':
-		case 'lightStatus':
+		//case 'lightStatus':
 		case 'timeState':
 		case 'resetSwitchState':
 		case 'meshInfo':
@@ -58,7 +58,7 @@ console.log("Press 6 to cycle forwards through colours");
 console.log("Press 7 to cycle backwards through colours");
 console.log("Press 8 to show debug messages including network traffic");
 console.log("Press 9 to hide debug messages including network traffic");
-//console.log("Press a to request an info update from the lights");
+console.log("Press letters a-i to request various status fields");
 
 var stdin = process.openStdin();
 process.stdin.setRawMode(true);
