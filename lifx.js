@@ -34,9 +34,9 @@ Lifx.prototype.startDiscovery = function() {
 	});
 
 	UDPClient.on("message", function (msg, rinfo) {
-		//if (debug) console.log(" U- " + msg.toString("hex"));
+		if (debug) console.log(" U- " + msg.toString("hex"));
 		var pkt = packet.fromBytes(msg);
-		if (pkt.packetTypeShortName == 'panGateway') {
+		if (pkt.packetTypeShortName == 'panGateway' && pkt.payload.service == 1) {
 			var gw = new Gateway(rinfo.address, pkt.payload.port, pkt.preamble.site);
 			self.foundGateway(gw);
 		}
@@ -61,7 +61,7 @@ Lifx.prototype.startDiscovery = function() {
 Lifx.prototype.foundGateway = function(gw) {
 	var found = false;
 	for (var i in this.gateways) {
-		if (this.gateways[i].ipAddress.ip == gw.ipAddress.ip) {
+		if (this.gateways[i].ipAddress.ip.toString('hex') == gw.ipAddress.ip.toString('hex')) {
 			found = true;
 		}
 	}
@@ -70,8 +70,8 @@ Lifx.prototype.foundGateway = function(gw) {
 		// Look for bulbs on this gateway
 		gw.connect();
 		gw.on('_packet', this._getPacketHandler());
-		//gw.findBulbs();
-		//this.emit("gateway", gw);
+		gw.findBulbs();
+		this.emit("gateway", gw);
 	}
 };
 
@@ -83,6 +83,13 @@ Lifx.prototype._getPacketHandler = function() {
 Lifx.prototype._gotPacket = function(data, gw) {
 	if (debug) console.log(" T- " + data.toString("hex"));
 	var p = packet.fromBytes(data);
+
+	switch (p.packetTypeShortName) {
+		case 'lightStatus':
+			this.foundBulb(p, gw);
+			break;
+	}
+
 	this.emit('packet', clone(p));
 };
 
@@ -108,18 +115,10 @@ Lifx.prototype._gotPacket_old = function(data, gw) {
 	}
 };
 
-Lifx.prototype.foundBulb = function(data, gw) {
-	// Find the end of the name
-	var endPos = 49;
-	for (var i=48; i<data.length; i++) {
-		if (data[i] === 0) {
-			endPos = i;
-			break;
-		}
-	}
+Lifx.prototype.foundBulb = function(bulb, gw) {
 
-	var bulbName = data.slice(48, endPos).toString('ascii').replace(/\0/g, '');
-	var lifxAddress = data.slice(8,14);
+	var bulbName = bulb.payload.bulbLabel;
+	var lifxAddress = bulb.preamble.targetMacAddress;
 	if (debug) console.log(" * Found a bulb: " + bulbName + " (address " + util.inspect(lifxAddress) + ")");
 
 	var found = false;
@@ -136,14 +135,7 @@ Lifx.prototype.foundBulb = function(data, gw) {
 		this.emit('bulb', clone(newBulb));
 	}
 
-	var bulb = this.getBulbByLifxAddress(lifxAddress);
-	var hue = (data[37] << 8) + data[36];
-	var sat = (data[39] << 8) + data[38];
-	var lum = (data[41] << 8) + data[40];
-	var whi = (data[43] << 8) + data[42];
-	var onoff = (data[46] > 0);
-	var state = {hue:hue, saturation:sat, luminance:lum, colourTemp:whi, on:onoff, bulb:bulb};
-	this.emit('bulbstate', clone(state));
+	this.emit('bulbstate', bulb.payload);
 };
 
 // This represents each individual bulb
@@ -212,6 +204,8 @@ Gateway.prototype.findBulbs = function() {
 // Send a raw command - targetAddr should be a buffer containing an 8-byte address.  Use zeroes to send to all bulbs.
 Gateway.prototype.send = function(sendBuf) {
 	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
+	var siteAddress = this.lifxAddress;
+	siteAddress.copy(sendBuf, 16);
 	this.tcpClient.write(sendBuf);
 };
 
@@ -244,6 +238,15 @@ Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 			g.send(command);
 		} else {
 			// Overwrite the targetMac here
+			var target;
+			if (Buffer.isBuffer(bulb)) {
+				target = bulb;
+			} else if (typeof bulb.lifxAddress != 'undefined') {
+				target = bulb.lifxAddress;
+			} else {
+				throw "Unknown bulb";
+			}
+			target.copy(command, 8);
 			g.send(command);
 		}
 	});

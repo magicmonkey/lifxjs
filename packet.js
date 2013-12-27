@@ -199,6 +199,19 @@ type = {
 			return b2.copy(b, start, 0, 3);
 		}
 	},
+	string3_le: {
+		size: 3,
+		parse: function(b, start) {
+			var size = 3;
+			var be = b.slice(start, start+size).toString().replace(/\0*$/, '');
+			var le = be.split("").reverse().join(""); // reverse the string
+			return le;
+		},
+		unparse: function(b, start, p) {
+			var b2 = new Buffer(p);
+			return b2.copy(b, start, 0, 3);
+		}
+	},
 	byte4: {
 		size: 4,
 		parse: function(b, start) {
@@ -349,13 +362,13 @@ packets = {
 			{name:"build_minute"  , type:type.uint8},
 			{name:"build_hour"    , type:type.uint8},
 			{name:"build_day"     , type:type.uint8},
-			{name:"build_month"   , type:type.byte3},
+			{name:"build_month"   , type:type.string3_le},
 			{name:"build_year"    , type:type.uint8},
 			{name:"install_second", type:type.uint8},
 			{name:"install_minute", type:type.uint8},
 			{name:"install_hour"  , type:type.uint8},
 			{name:"install_day"   , type:type.uint8},
-			{name:"install_month" , type:type.byte3},
+			{name:"install_month" , type:type.string3_le},
 			{name:"install_year"  , type:type.uint8},
 			{name:"version"       , type:type.uint32_le}
 		]
@@ -392,13 +405,13 @@ packets = {
 			{name:"build_minute"  , type:type.uint8},
 			{name:"build_hour"    , type:type.uint8},
 			{name:"build_day"     , type:type.uint8},
-			{name:"build_month"   , type:type.string3},
+			{name:"build_month"   , type:type.string3_le},
 			{name:"build_year"    , type:type.uint8},
 			{name:"install_second", type:type.uint8},
 			{name:"install_minute", type:type.uint8},
 			{name:"install_hour"  , type:type.uint8},
 			{name:"install_day"   , type:type.uint8},
-			{name:"install_month" , type:type.string3},
+			{name:"install_month" , type:type.string3_le},
 			{name:"install_year"  , type:type.uint8},
 			{name:"version"       , type:type.uint32_le}
 		]

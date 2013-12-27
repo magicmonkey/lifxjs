@@ -15,7 +15,7 @@ lx.on('bulbonoff', function(b) {
 });
 
 lx.on('bulb', function(b) {
-	//console.log('New bulb found: ' + b.name);
+	console.log('New bulb found: ' + util.inspect(b));
 });
 
 lx.on('gateway', function(g) {
@@ -23,7 +23,29 @@ lx.on('gateway', function(g) {
 });
 
 lx.on('packet', function(p) {
-	console.log(p.packetTypeName + " - " + p.preamble.targetMacAddress.toString('hex') + " - " + util.inspect(p.payload));
+	// Show informational packets
+	switch (p.packetTypeShortName) {
+		case 'powerState':
+		case 'wifiInfo':
+		case 'wifiFirmwareState':
+		case 'wifiState':
+		case 'accessPoint':
+		case 'bulbLabel':
+		case 'tags':
+		case 'tagLabels':
+		case 'lightStatus':
+		case 'timeState':
+		case 'resetSwitchState':
+		case 'meshInfo':
+		case 'meshFirmwareState':
+		case 'versionState':
+		case 'infoState':
+		case 'mcuRailVoltage':
+			console.log(p.packetTypeName + " - " + p.preamble.targetMacAddress.toString('hex') + " - " + util.inspect(p.payload));
+			break;
+		default:
+			break;
+	}
 });
 
 console.log("Keys:");
@@ -134,6 +156,12 @@ stdin.on('data', function (key) {
 		case 0x67: // g
 			console.log("Requesting tags");
 			var message = packet.getTags();
+			lx.sendToAll(message);
+			break;
+
+		case 0x68: // h
+			console.log("Requesting tag label for tag 1");
+			var message = packet.getTagLabels({tags:new Buffer([1,0,0,0,0,0,0,0])});
 			lx.sendToAll(message);
 			break;
 
