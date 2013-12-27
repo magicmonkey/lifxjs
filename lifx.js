@@ -46,14 +46,14 @@ Lifx.prototype.startDiscovery = function() {
 		UDPClient.setBroadcast(true);
 		var intervalID;
 		// Now send the discovery packets
-//		self._intervalID = setInterval(function() {
+		self._intervalID = setInterval(function() {
 
 			var message = packet.getPanGateway({protocol:21504});
 
 			if (debug) console.log(" U+ " + message.toString("hex"));
 			UDPClient.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
 			});
-//		}, 1000);
+		}, 1000);
 	});
 
 };
