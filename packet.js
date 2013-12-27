@@ -86,7 +86,7 @@ packet.fromParams = function(p) {
 					datum = p[f.name];
 				}
 				break;
-			case 'targetMacAddress':
+			case 'bulbAddress':
 			case 'site':
 				if (typeof p[f.name] == 'undefined') {
 					datum = new Buffer([0,0,0,0,0,0]);
@@ -266,16 +266,16 @@ type = {
 };
 
 preambleFields = [
-	{ name: "size"            , type:type.uint16_le },
-	{ name: "protocol"        , type:type.uint16_le },
-	{ name: "reserved1"       , type:type.byte4 }    ,
-	{ name: "targetMacAddress", type:type.byte6 }    ,
-	{ name: "reserved2"       , type:type.byte2 }    ,
-	{ name: "site"            , type:type.byte6 }    ,
-	{ name: "reserved3"       , type:type.byte2 }    ,
-	{ name: "timestamp"       , type:type.uint64 }   ,
-	{ name: "packetType"      , type:type.uint16_le },
-	{ name: "reserved4"       , type:type.byte2 }    ,
+	{ name: "size"       , type:type.uint16_le },
+	{ name: "protocol"   , type:type.uint16_le },
+	{ name: "reserved1"  , type:type.byte4 }    ,
+	{ name: "bulbAddress", type:type.byte6 }    ,
+	{ name: "reserved2"  , type:type.byte2 }    ,
+	{ name: "site"       , type:type.byte6 }    ,
+	{ name: "reserved3"  , type:type.byte2 }    ,
+	{ name: "timestamp"  , type:type.uint64 }   ,
+	{ name: "packetType" , type:type.uint16_le },
+	{ name: "reserved4"  , type:type.byte2 }    ,
 ];
 
 packets = {

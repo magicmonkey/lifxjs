@@ -41,7 +41,7 @@ lx.on('packet', function(p) {
 		case 'versionState':
 		case 'infoState':
 		case 'mcuRailVoltage':
-			console.log(p.packetTypeName + " - " + p.preamble.targetMacAddress.toString('hex') + " - " + util.inspect(p.payload));
+			console.log(p.packetTypeName + " - " + p.preamble.bulbAddress.toString('hex') + " - " + util.inspect(p.payload));
 			break;
 		default:
 			break;

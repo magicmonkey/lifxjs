@@ -118,7 +118,7 @@ Lifx.prototype._gotPacket_old = function(data, gw) {
 Lifx.prototype.foundBulb = function(bulb, gw) {
 
 	var bulbName = bulb.payload.bulbLabel;
-	var lifxAddress = bulb.preamble.targetMacAddress;
+	var lifxAddress = bulb.preamble.bulbAddress;
 	if (debug) console.log(" * Found a bulb: " + bulbName + " (address " + util.inspect(lifxAddress) + ")");
 
 	var found = false;
@@ -201,7 +201,7 @@ Gateway.prototype.findBulbs = function() {
 	this.send(packet.getLightState());
 };
 
-// Send a raw command - targetAddr should be a buffer containing an 8-byte address.  Use zeroes to send to all bulbs.
+// Send a raw command
 Gateway.prototype.send = function(sendBuf) {
 	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
 	var siteAddress = this.lifxAddress;
@@ -237,7 +237,7 @@ Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 		if (typeof bulb == 'undefined') {
 			g.send(command);
 		} else {
-			// Overwrite the targetMac here
+			// Overwrite the bulb address here
 			var target;
 			if (Buffer.isBuffer(bulb)) {
 				target = bulb;
