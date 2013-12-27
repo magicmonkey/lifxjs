@@ -168,6 +168,16 @@ type = {
 			return p.copy(b, start, 0, 8);
 		}
 	},
+	uint64_le: { // TBD
+		size: 8,
+		parse: function(b, start) {
+			var size = 8;
+			return b.slice(start, start+size);
+		},
+		unparse: function(b, start, p) {
+			return p.copy(b, start, 0, 8);
+		}
+	},
 	float_le: {
 		size: 4,
 		parse: function(b, start) {
@@ -305,7 +315,7 @@ packets = {
 		shortname:"setTime",
 		length:8,
 		fields:[
-			{name:"time", type:type.uint64}
+			{name:"time", type:type.uint64_le}
 		]
 	},
 	0x06: {
@@ -313,7 +323,7 @@ packets = {
 		shortname:"timeState",
 		length:8,
 		fields:[
-			{name:"time", type:type.uint64}
+			{name:"time", type:type.uint64_le}
 		]
 	},
 	0x07: {
@@ -327,7 +337,7 @@ packets = {
 		shortname:"resetSwitchState",
 		length:2,
 		fields:[
-			{name:"position", type:type.uint16}
+			{name:"position", type:type.uint8}
 		]
 	},
 	0x0c: {
@@ -535,9 +545,9 @@ packets = {
 		shortname:"infoState",
 		length:24,
 		fields:[
-			{name:"time"    , type:type.uint64},
-			{name:"uptime"  , type:type.uint64},
-			{name:"downtime", type:type.uint64}
+			{name:"time"    , type:type.uint64_le},
+			{name:"uptime"  , type:type.uint64_le},
+			{name:"downtime", type:type.uint64_le}
 		]
 	},
 	0x24: {
