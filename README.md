@@ -102,10 +102,11 @@ underlying details).
 * fadeTime says how quickly the bulbs should move to the given state, and seem
   to roughly be in milliseconds.  Use 0 for an immediate change.
 
-You can also send a raw command to all bulbs using ```lx.sendToAll(buffer)```
-which will get the packet preamble prepended.  Similarly, to send a raw command
-to an individual bulb, use ```lx.sendToOne(buffer, bulb)``` passing in a bulb
-object from the lx.bulbs array.
+The "packet.js" module constructs each raw packet type, which can be sent to all
+bulbs using something like ```lx.sendToAll(packet.getLightState())```.
+Similarly, to send a raw command to an individual bulb, use
+```lx.sendToOne(packet.getLightState(), bulb)``` passing in a bulb object from
+the lx.bulbs array.
 
 If you want to see debug messages (including network traffic) then call
 
