@@ -164,7 +164,7 @@ Will hopefully cause a packet type [0x03](#0x03) to be sent back;
 apps should treat the originator of this response as a PAN gateway bulb for
 further communication.
 
-### <a name="0x03"></a>0x03 - PAN gateway state
+### <a name="0x03"></a>0x03 - PAN gateway
 
 Received from a gateway bulb after a request for its PAN gateway state
 (direct or broadcast). One packet describes one gateway bulb (i.e. you will
@@ -175,7 +175,7 @@ receive a few of these packets).
 ```c
 payload {
   SERVICE service;
-  uint32 port;
+  uint32 port;     // LE
 }
 
 enum SERVICE : byte
@@ -210,7 +210,7 @@ Sent to a bulb to set its internal time value.
 
 ```c
 payload {
-  uint64 time; // microseconds since 00:00:00 UTC on 1 January 1970
+  uint64 time; // LE; microseconds since 00:00:00 UTC on 1 January 1970
 }
 ```
 
@@ -222,7 +222,7 @@ Received from a bulb after a request for its current time value.
 
 ```c
 payload {
-  uint64 time; // microseconds since 00:00:00 UTC on 1 January 1970
+  uint64 time; // LE; microseconds since 00:00:00 UTC on 1 January 1970
 }
 ```
 
@@ -251,7 +251,7 @@ payload
   RESET_SWITCH_POSITION position;
 }
 
-enum RESET_SWITCH_POSITION: uint16
+enum RESET_SWITCH_POSITION: uint8
 {
   UP = 0,
   DOWN = 1
@@ -281,9 +281,9 @@ Received from a bulb after a request is made for its mesh info.
 ```c
 payload
 {
-  float signal;
-  int tx;
-  int rx;
+  float signal;          // LE
+  int tx;                // LE
+  int rx;                // LE
   short mcu_temperature;
 }
 ```
@@ -312,7 +312,7 @@ payload
 {
   LIFX_TIMESTAMP build;
   LIFX_TIMESTAMP install;
-  uint32 version;
+  uint32 version;          // LE?
 }
 
 struct LIFX_TIMESTAMP
@@ -321,7 +321,7 @@ struct LIFX_TIMESTAMP
   byte minute;
   byte hour;
   byte day;
-  char month[3]; // ASCII encoded
+  char month[3]; // LE; ASCII encoded
   byte year;
 }
 ```
@@ -348,9 +348,9 @@ Received from a bulb after a request is made for its wifi info.
 ```c
 payload
 {
-  float signal;
-  int tx;
-  int rx;
+  float signal;   // LE
+  int tx;         // LE
+  int rx;         // LE
   short mcu_temperature;
 }
 ```
@@ -379,7 +379,7 @@ payload
 {
   LIFX_TIMESTAMP build;
   LIFX_TIMESTAMP install;
-  uint32 version;
+  uint32 version;           // LE?
 }
 
 struct LIFX_TIMESTAMP
@@ -388,7 +388,7 @@ struct LIFX_TIMESTAMP
   byte minute;
   byte hour;
   byte day;
-  char month[3]; // ASCII encoded
+  char month[3]; // LE; ASCII encoded
   byte year;
 }
 ```
@@ -623,9 +623,9 @@ Received from a bulb in response to a request for info state.
 ```c
 payload
 {
-  uint64 time;
-  uint64 uptime;
-  uint64 downtime;
+  uint64 time;      // LE
+  uint64 uptime;    // LE
+  uint64 downtime;  // LE
 }
 ```
 
@@ -651,7 +651,7 @@ Received from a bulb after a microcontroller (MCU) rail voltage request.
 ```c
 payload
 {
-  uint32 voltage; // [val] / 1000 = real voltage? (e.g. 4.007)
+  uint32 voltage; // LE; in mV
 }
 ```
 
@@ -751,12 +751,12 @@ Sent to a bulb to configure its [waveform?]. [Advanced topic, needs expansion.]
 payload {
   byte stream;
   byte transient;
-  uint16 hue;
-  uint16 saturation;
-  uint16 brightness;
-  uint16 kelvin;
-  uint32 period;
-  float cycles;
+  uint16 hue;        // LE
+  uint16 saturation; // LE
+  uint16 brightness; // LE
+  uint16 kelvin;     // LE
+  uint32 period;     // LE?
+  float cycles;      // LE?
   uint16 duty_cycles;
   byte waveform;
 }
@@ -770,8 +770,8 @@ Sent to a bulb to set its dim level.
 
 ```c
 payload {
-  int16 brightness;
-  uint32 duration; // in seconds
+  int16 brightness; // LE
+  uint32 duration;  // in seconds
 }
 ```
 
@@ -783,7 +783,7 @@ Sent to a bulb to set its dim level, relative to the current value.
 
 ```c
 payload {
-  int16 brightness;
+  int16 brightness; // LE
   uint32 duration; // in seconds
 }
 ```
@@ -801,7 +801,7 @@ payload {
   uint16 saturation;   // LE
   uint16 brightness;   // LE
   uint16 kelvin;       // LE
-  uint16 dim;
+  uint16 dim;          // LE?
   uint16 power;
   char bulb_label[32]; // UTF-8 encoded string
   uint64 tags;
