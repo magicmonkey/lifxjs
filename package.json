@@ -1,6 +1,6 @@
 {
   "name": "lifx",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": "Kevin Bowman <npm@magicmonkey.org>",
   "description": "a library to control LIFX wifi lightbulbs",
   "main": "./lifx.js",
