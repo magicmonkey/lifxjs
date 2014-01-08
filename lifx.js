@@ -184,6 +184,13 @@ Gateway.prototype.connect = function() {
 	});
 	this.tcpClient.on('error', function(err) {
 		console.log(err);
+		if(err.code == 'ECONNRESET') {
+			self.tcpClient.destroy();
+			if (self.reconnect) {
+				console.log('RECONNECTING...');
+				self.connect();
+			}
+		}
 	});
 	this.tcpClient.on('end', function() {
 		console.log('TCP client disconnected');
