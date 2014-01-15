@@ -2,7 +2,7 @@ var lifx = require('../../lifx');
 var util = require('util');
 var mqtt = require('mqtt');
 
-var broker = '10.1.0.1';
+var broker = 'localhost';
 var lx = lifx.init();
 
 console.log("Searching for a LIFX gateway...");
@@ -24,11 +24,9 @@ lx.on('gateway', function(g) {
 	mqttClient.publish('/lifx/gateway', JSON.stringify({ipAddress:g.ipAddress, lifxAddress:g.lifxAddress.toString('hex')}));
 });
 lx.on('bulb', function(b) {
-	b.lifxAddress = b.lifxAddress.toString('hex');
 	mqttClient.publish('/lifx/newbulb', JSON.stringify({bulb:b,mqttTopicBase:"/lifx/bulbcmd/"+b.lifxAddress.toString('hex')}));
 });
 lx.on('bulbstate', function(s) {
-	s.bulb.lifxAddress = s.bulb.lifxAddress.toString('hex');
 	mqttClient.publish('/lifx/bulb/'+s.bulb.lifxAddress.toString('hex'), JSON.stringify(s));
 });
 lx.on('bulbonoff', function(s) {
@@ -38,7 +36,7 @@ lx.on('bulbonoff', function(s) {
 mqttClient.subscribe('/lifx/bulbcmd/#');
 mqttClient.on('message', function(topic, message) {
 	console.log(topic + " " + message);
-	if (matches = topic.match(/bulbcmd\/([0-9a-f]{16})\/([a-z]*)$/)) {
+	if (matches = topic.match(/bulbcmd\/([0-9a-f]{12})\/([a-z]*)$/)) {
 		var lifxAddress = matches[1];
 		var cmd = matches[2];
 		try{
@@ -46,6 +44,17 @@ mqttClient.on('message', function(topic, message) {
 		} catch (e) {
 			console.log("Could not parse JSON message: " + message);
 		}
+                // Find bulb
+                var bulb = null;
+                for (var b in lx.bulbs) {
+                    if (lx.bulbs[b].lifxAddress.toString("hex") == lifxAddress) {
+                        bulb = lx.bulbs[b];
+                    }
+                }
+                if (!bulb) {
+                    console.log("Bulb " + lifxAddress + " not found");
+                    return;
+                }
 		switch (cmd) {
 
 			case "colour":
@@ -65,22 +74,22 @@ mqttClient.on('message', function(topic, message) {
 			case "off":
 				if (typeof params.on != 'undefined') {
 					if (params.on) {
-						lx.lightsOn(lifxAddress);
+						lx.lightsOn(bulb);
 					} else {
-						lx.lightsOff(lifxAddress);
+						lx.lightsOff(bulb);
 					}
 				} else if (typeof params.off != 'undefined') {
 					if (params.off) {
-						lx.lightsOff(lifxAddress);
+						lx.lightsOff(bulb);
 					} else {
-						lx.lightsOn(lifxAddress);
+						lx.lightsOn(bulb);
 					}
 				} else {
 					console.log("Incomplete message; expecting one of on/off in message " + message);
 				}
 				break;
 		}
-	}
+	} 
 	if (matches = topic.match(/bulbcmd\/all\/([a-z]*)$/)) {
 		var cmd = matches[1];
 		try{
