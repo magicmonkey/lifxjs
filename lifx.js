@@ -27,7 +27,10 @@ Lifx.prototype.__proto__ = events.EventEmitter.prototype;
 Lifx.prototype.startDiscovery = function() {
 	var self = this;
 	var UDPClient = dgram.createSocket("udp4");
-	UDPClient.unref(); // Stop this from preventing Node from ending
+	
+	if (UDPClient.unref) { // unref is not available in Node 0.8
+		UDPClient.unref(); // Stop this from preventing Node from ending
+	}
 
 	UDPClient.on("error", function (err) {
 		console.log("UDP error " + err);
