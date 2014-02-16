@@ -103,7 +103,7 @@ packet.fromParams = function(p) {
 				datum.fill(0);
 				break;
 			case 'packetType':
-				datum = pParser.packetType;
+			 	datum = parseInt(pParser.packetType, 10);
 				break;
 		}
 		f.type.unparse(newPacket, runningPlace, datum);
