@@ -79,6 +79,11 @@ packet
  * [0x02 - Get PAN gateway](#0x02) - app to bulb
  * [0x03 - PAN gateway](#0x03) - bulb to app
 
+### Time
+ * [0x04 - Get time](#0x04) - app to bulb
+ * [0x05 - Set time](#0x05) - app to bulb
+ * [0x06 - Time state](#0x06) - bulb to app
+ 
 ### Power management
  * [0x14 - Get power state](#0x14) - app to bulb 
  * [0x15 - Set power state](#0x15) - app to bulb
