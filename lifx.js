@@ -181,6 +181,10 @@ Gateway.prototype.connect = function() {
 	});
 	this.tcpClient.on('error', function(err) {
 		console.log(err);
+		try { self.tcpClient.end();     } catch(ex) { console.log('end: '     + ex.message); }
+		try { self.tcpClient.destroy(); } catch(ex) { console.log('destroy: ' + ex.message); }
+		self.tcpClient = null;
+		if (self.reconnect) self.connect();
 	});
 	this.tcpClient.on('end', function() {
 		console.log('TCP client disconnected');
@@ -204,6 +208,8 @@ Gateway.prototype.findBulbs = function() {
 
 // Send a raw command
 Gateway.prototype.send = function(sendBuf) {
+	if (!this.tcpClient) return;
+
 	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
 	var siteAddress = this.lifxAddress;
 	siteAddress.copy(sendBuf, 16);
@@ -213,7 +219,7 @@ Gateway.prototype.send = function(sendBuf) {
 // Close the connection to this gateway
 Gateway.prototype.close = function() {
 	this.reconnect = false;
-	this.tcpClient.end();
+	if (!!this.tcpClient) this.tcpClient.end();
 };
 
 Lifx.prototype.close = function() {
