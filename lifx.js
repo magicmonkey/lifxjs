@@ -175,7 +175,7 @@ Lifx.prototype.getBulbByLifxAddress = function(lifxAddress) {
 Gateway.prototype.connect = function() {
 	var self = this;
 	if (debug) console.log("Connecting to " + this.ipAddress.ip + ":" + this.ipAddress.port);
-	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip);
+	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip, function() { console.log('LIFX connected.');});
 	this.tcpClient.on('data', function(data) {
 		self.emit('_packet', data, self);
 	});
@@ -184,7 +184,7 @@ Gateway.prototype.connect = function() {
 		try { self.tcpClient.end();     } catch(ex) { console.log('end: '     + ex.message); }
 		try { self.tcpClient.destroy(); } catch(ex) { console.log('destroy: ' + ex.message); }
 		self.tcpClient = null;
-		if (self.reconnect) self.connect();
+		if ((err.code === 'ECONNRESET') && (self.reconnect)) self.connect();
 	});
 	this.tcpClient.on('end', function() {
 		console.log('TCP client disconnected');
