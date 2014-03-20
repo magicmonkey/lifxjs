@@ -732,7 +732,7 @@ payload {
   uint16 saturation;  // LE
   uint16 brightness;  // LE
   uint16 kelvin;      // LE i.e. colour temperature (whites wheel in apps)
-  uint32 fade_time;   // LE Length of fade action, in seconds
+  uint32 fade_time;   // LE Length of fade action, in milliseconds
 }
 ```
 
