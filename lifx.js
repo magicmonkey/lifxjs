@@ -183,7 +183,7 @@ Gateway.prototype.connect = function() {
 		console.log(err);
 	});
 	this.tcpClient.on('end', function() {
-		console.log('TCP client disconnected');
+		console.log('LIFX TCP client disconnected');
 		self.tcpClient.destroy();
 		if (self.reconnect) {
 			self.connect();
