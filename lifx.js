@@ -2,7 +2,7 @@ var dgram = require('dgram');
 var net = require('net');
 var util = require('util');
 var events = require('events');
-var clone = require('clone');
+var clone = require('component-clone');
 
 var packet = require('./packet');
 
@@ -175,7 +175,9 @@ Lifx.prototype.getBulbByLifxAddress = function(lifxAddress) {
 Gateway.prototype.connect = function() {
 	var self = this;
 	if (debug) console.log("Connecting to " + this.ipAddress.ip + ":" + this.ipAddress.port);
-	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip, function() { console.log('LIFX connected.');});
+	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip, function() {
+          if (debug) console.log('LIFX connected.');
+        });
 	this.tcpClient.on('data', function(data) {
 		self.emit('_packet', data, self);
 	});
