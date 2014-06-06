@@ -25,6 +25,6 @@
     "lightbulb"
   ],
   "dependencies" : {
-    "clone" : "*"
+    "clone" : "0.1.11"
   }
 }
