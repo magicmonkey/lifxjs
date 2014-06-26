@@ -151,8 +151,8 @@ Lifx.prototype.foundBulb = function(bulb, gw) {
 
 	if (!foundBulb) {
 		var newBulb = new Bulb(lifxAddress, bulbName);
-		if (debug) console.log("*** New bulb found (" + newBulb.name + ") by gateway " + gw.ipAddress.ip + " ***");
-		this.bulbs[bulb.address] = newBulb;
+		if (debug) console.log("*** New bulb found (" + newBulb.name + ") by gateway " + gw.ipAddress.ip + " *** " + newBulb.address);
+		this.bulbs[newBulb.address] = newBulb;
 		this.emit('bulb', clone(newBulb));
 		foundBulb = newBulb;
 	}
@@ -221,23 +221,35 @@ Gateway.prototype.connect = function() {
 
 Lifx.prototype.findBulbs = function() {
 	_(this.gateways).invoke('findBulbs');
+
 };
 
 // This method requests that the gateway tells about all of its bulbs
 Gateway.prototype.findBulbs = function() {
-	this.send(packet.getLightState());
+	var self = this;
+	self._sendToAll(packet.getLightState());
+	setTimeout(function() {
+		var p = { tags: new Buffer([255, 255, 255, 255, 255, 255, 255, 255]) };
+		self._sendToAll(packet.getTagLabels(p));
+	}, 1500);
+	setTimeout(function() {
+		self._sendToAll(packet.getLightState());
+	}, 3000);
 };
 
 // Send a raw command
 Gateway.prototype.send = function(sendBuf) {
 	if (!this.udpClient) return;
-	
+
 	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
 
 	this.udpClient.send(sendBuf, 0, sendBuf.length, this.ipAddress.port, this.ipAddress.ip, function() {
-		// sent
 	});
+};
 
+Gateway.prototype._sendToAll = function(command) {
+	this.lifxAddress.copy(command, 16);
+	this.send(command);
 };
 
 // Close the connection to this gateway

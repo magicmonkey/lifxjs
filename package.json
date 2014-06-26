@@ -25,6 +25,7 @@
     "lightbulb"
   ],
   "dependencies" : {
-    "clone" : "0.1.11"
+    "clone" : "0.1.12",
+    "underscore": "1.6"
   }
 }
