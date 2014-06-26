@@ -69,31 +69,27 @@ Lifx.prototype._scheduleDiscovery = function(interval) {
 		});
 	}, interval);
 
-}
+};
 
 Lifx.prototype.foundGateway = function(gw) {
+	
 	this._scheduleDiscovery(30000);			// slow down sending gateway discovery messages
-
+	
 	var gateway = this.gateways[gw.ipAddress.ip.toString('hex')];
+	if (_.isObject(gateway)) {
+		if ((Date.now() - gateway.lastHeard) > 10000) {
+			if (debug) console.log('looking for bulb reconnecting bulb...');
 
-  if (_.isObject(gateway)) {
+			var bulb = this.bulbs[gateway.lifxAddress.toString('hex')];
+			if (_.isObject(bulb)) {
+				var offSeconds = (Date.now() - gateway.lastHeard) / 1000;
+				if (debug) console.log("Bulb back online, was offline for " + offSeconds + " seconds");
+				this.emit('bulbreconnect', clone(bulb), offSeconds);
+			}
+		}
 
-    if ((Date.now() - gateway.lastHeard) > 10000) {
-    	if (debug) console.log('looking for bulb reconnecting bulb...');
-
-    	var bulb = this.bulbs[gateway.lifxAddress.toString('hex')];
-
-      if (_.isObject(bulb)) {
-      	var offSeconds = (Date.now() - gateway.lastHeard) / 1000;
-        if (debug) console.log("Bulb back online, was offline for " + offSeconds + " seconds");
-        this.emit('bulbreconnect', clone(bulb), offSeconds);
-      }
-
-    }
-
-    gateway.lastHeard = Date.now();
-  }
-  else {
+		gateway.lastHeard = Date.now();
+	} else {
 		this.gateways[gw.ipAddress.ip.toString('hex')] = gw;
 		// Look for bulbs on this gateway
 		gw.connect();
@@ -177,7 +173,6 @@ function Gateway(ipAddress, port, site) {
 	this.ipAddress   = {ip:ipAddress, port:port};
 	this.lifxAddress = site;
 	this.address     = ipAddress.toString('hex');
-	//this.tcpClient   = null;
 	this.udpClient   = null;
 	this.reconnect   = true;
 	this.lastHeard   = Date.now();
@@ -205,7 +200,7 @@ Gateway.prototype.connect = function() {
 
 	this.udpClient.bind(this.ipAddress.port, function() {
 		if (debug) console.log("LIFX Gateway: socket bound");
-	})
+	});
 
 	this.udpClient.on("message", function(msg, rinfo) {
 		self.emit('_packet', msg, self);
@@ -222,30 +217,10 @@ Gateway.prototype.connect = function() {
 		}
 	});
 
-/*
-	var tcpClient = this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip, function() { console.log('LIFX connected.');});
-	tcpClient.on('data', function(data) {
-		self.emit('_packet', data, self);
-	});
-	tcpClient.on('error', function(err) {
-		console.log(err);
-		try { tcpClient.end();     } catch(ex) { console.log('end: '     + ex.message); }
-		try { tcpClient.destroy(); } catch(ex) { console.log('destroy: ' + ex.message); }
-		this.tcpClient = null;
-		if ((err.code === 'ECONNRESET') && (self.reconnect)) self.connect();
-	});
-	tcpClient.on('close', function() {
-		console.log('LIFX TCP client disconnected');
-		tcpClient.destroy();
-		if (self.reconnect) {
-			self.connect();
-		}
-	});
-*/
 };
 
 Lifx.prototype.findBulbs = function() {
-  _(this.gateways).invoke('findBulbs');
+	_(this.gateways).invoke('findBulbs');
 };
 
 // This method requests that the gateway tells about all of its bulbs
@@ -263,21 +238,12 @@ Gateway.prototype.send = function(sendBuf) {
 		// sent
 	});
 
-	/*
-	if (!this.tcpClient) return;
-
-	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
-	var siteAddress = this.lifxAddress;
-	siteAddress.copy(sendBuf, 16);
-	this.tcpClient.write(sendBuf);
-	*/
 };
 
 // Close the connection to this gateway
 Gateway.prototype.close = function() {
 	this.reconnect = false;
-	if (!!this.udpClient) this.tcpClient.close();
-	//if (!!this.tcpClient) this.tcpClient.end();
+	if (!!this.udpClient) this.udpClient.close();
 };
 
 Lifx.prototype.close = function() {
