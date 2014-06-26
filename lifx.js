@@ -1,8 +1,9 @@
-var dgram = require('dgram');
-var net = require('net');
-var util = require('util');
+var _    = require('underscore');
+var dgram  = require('dgram');
+var net    = require('net');
+var util   = require('util');
 var events = require('events');
-var clone = require('clone');
+var clone  = require('clone');
 
 var packet = require('./packet');
 
@@ -18,25 +19,28 @@ function init() {
 
 function Lifx() {
 	events.EventEmitter.call(this);
-	this.gateways = [];
-	this.bulbs = [];
+
+	this.gateways = {};
+	this.bulbs    = {};
+
+	this._discoverInterval = 10000;
 	this._intervalID = null;
 }
 Lifx.prototype.__proto__ = events.EventEmitter.prototype;
 
 Lifx.prototype.startDiscovery = function() {
 	var self = this;
-	var UDPClient = dgram.createSocket("udp4");
-	
-	if (UDPClient.unref) { // unref is not available in Node 0.8
-		UDPClient.unref(); // Stop this from preventing Node from ending
+	var udpClient = this._discoveryClient = dgram.createSocket("udp4");
+
+	if (udpClient.unref) { // unref is not available in Node 0.8
+		udpClient.unref(); // Stop this from preventing Node from ending
 	}
 
-	UDPClient.on("error", function (err) {
+	udpClient.on("error", function (err) {
 		console.log("UDP error " + err);
 	});
 
-	UDPClient.on("message", function (msg, rinfo) {
+	udpClient.on("message", function (msg, rinfo) {
 		if (debug) console.log(" U- " + msg.toString("hex"));
 		var pkt = packet.fromBytes(msg);
 		if (pkt.packetTypeShortName == 'panGateway' && pkt.payload.service == 1) {
@@ -45,31 +49,52 @@ Lifx.prototype.startDiscovery = function() {
 		}
 	});
 
-	UDPClient.bind(port, "0.0.0.0", function() {
-		UDPClient.setBroadcast(true);
-		var intervalID;
-		// Now send the discovery packets
-		self._intervalID = setInterval(function() {
-
-			var message = packet.getPanGateway({protocol:21504});
-
-			if (debug) console.log(" U+ " + message.toString("hex"));
-			UDPClient.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
-			});
-		}, 1000);
+	udpClient.bind(port, "0.0.0.0", function() {
+		udpClient.setBroadcast(true);
+		self._scheduleDiscovery(1000);		// Now send the discovery packets
 	});
 
 };
 
-Lifx.prototype.foundGateway = function(gw) {
-	var found = false;
-	for (var i in this.gateways) {
-		if (this.gateways[i].ipAddress.ip.toString('hex') == gw.ipAddress.ip.toString('hex')) {
-			found = true;
-		}
+Lifx.prototype._scheduleDiscovery = function(interval) {
+	var self = this;
+	if (this._intervalID) {
+		clearInterval(this._intervalID);
 	}
-	if (!found) {
-		this.gateways.push(gw);
+
+	this._intervalID = setInterval(function() {
+		var message = packet.getPanGateway({protocol:21504});
+		if (debug) console.log(" U+ " + message.toString("hex"));
+		self._discoveryClient.send(message, 0, message.length, port, "255.255.255.255", function(err, bytes) {
+		});
+	}, interval);
+
+}
+
+Lifx.prototype.foundGateway = function(gw) {
+	this._scheduleDiscovery(30000);			// slow down sending gateway discovery messages
+
+	var gateway = this.gateways[gw.ipAddress.ip.toString('hex')];
+
+  if (_.isObject(gateway)) {
+
+    if ((Date.now() - gateway.lastHeard) > 10000) {
+    	if (debug) console.log('looking for bulb reconnecting bulb...');
+
+    	var bulb = this.bulbs[gateway.lifxAddress.toString('hex')];
+
+      if (_.isObject(bulb)) {
+      	var offSeconds = (Date.now() - gateway.lastHeard) / 1000;
+        if (debug) console.log("Bulb back online, was offline for " + offSeconds + " seconds");
+        this.emit('bulbreconnect', clone(bulb), offSeconds);
+      }
+
+    }
+
+    gateway.lastHeard = Date.now();
+  }
+  else {
+		this.gateways[gw.ipAddress.ip.toString('hex')] = gw;
 		// Look for bulbs on this gateway
 		gw.connect();
 		gw.on('_packet', this._getPacketHandler());
@@ -86,6 +111,8 @@ Lifx.prototype._getPacketHandler = function() {
 Lifx.prototype._gotPacket = function(data, gw) {
 	if (debug) console.log(" T- " + data.toString("hex"));
 	var p = packet.fromBytes(data);
+
+	if (debug) console.log("got packet: " + JSON.stringify(p));
 
 	switch (p.packetTypeShortName) {
 		case 'lightStatus':
@@ -124,17 +151,12 @@ Lifx.prototype.foundBulb = function(bulb, gw) {
 	var lifxAddress = bulb.preamble.bulbAddress;
 	if (debug) console.log(" * Found a bulb: " + bulbName + " (address " + util.inspect(lifxAddress) + ")");
 
-	var foundBulb = null;
-	for (var bulbId in this.bulbs) {
-		if (this.bulbs[bulbId].lifxAddress.toString("hex") == lifxAddress.toString("hex")) {
-			foundBulb = this.bulbs[bulbId];
-		}
-	}
+	var foundBulb = this.bulbs[lifxAddress.toString('hex')];
 
 	if (!foundBulb) {
 		var newBulb = new Bulb(lifxAddress, bulbName);
 		if (debug) console.log("*** New bulb found (" + newBulb.name + ") by gateway " + gw.ipAddress.ip + " ***");
-		this.bulbs.push(newBulb);
+		this.bulbs[bulb.address] = newBulb;
 		this.emit('bulb', clone(newBulb));
 		foundBulb = newBulb;
 	}
@@ -146,15 +168,19 @@ Lifx.prototype.foundBulb = function(bulb, gw) {
 function Bulb(_lifxAddress, _name) {
 	this.lifxAddress = _lifxAddress;
 	this.name        = _name;
+	this.address     = _lifxAddress.toString('hex');
 }
 
 // This represents the gateway, and its respective functions (eg discovery, send-to-all etc)
 function Gateway(ipAddress, port, site) {
 	// TODO: validation...
-	this.ipAddress = {ip:ipAddress, port:port};
+	this.ipAddress   = {ip:ipAddress, port:port};
 	this.lifxAddress = site;
-	this.tcpClient = null;
-	this.reconnect = true;
+	this.address     = ipAddress.toString('hex');
+	//this.tcpClient   = null;
+	this.udpClient   = null;
+	this.reconnect   = true;
+	this.lastHeard   = Date.now();
 	events.EventEmitter.call(this);
 }
 
@@ -166,45 +192,60 @@ Lifx.prototype.getBulbByLifxAddress = function(lifxAddress) {
 	if (typeof lifxAddress != 'string') {
 		addrToSearch = lifxAddress.toString('hex');
 	}
-	for (var i in this.bulbs) {
-		if (this.bulbs[i].lifxAddress.toString('hex') == addrToSearch) {
-			return this.bulbs[i];
-		}
-	}
-	return false;
+
+	return this.bulbs[addrToSearch] || false;
 };
 
 // Open a control connection (over TCP) to the gateway node
 Gateway.prototype.connect = function() {
 	var self = this;
 	if (debug) console.log("Connecting to " + this.ipAddress.ip + ":" + this.ipAddress.port);
-	this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip);
-	this.tcpClient.on('data', function(data) {
-		self.emit('_packet', data, self);
+
+	var udpClient = this.udpClient = dgram.createSocket("udp4");
+
+	this.udpClient.bind(this.ipAddress.port, function() {
+		if (debug) console.log("LIFX Gateway: socket bound");
+	})
+
+	this.udpClient.on("message", function(msg, rinfo) {
+		self.emit('_packet', msg, self);
 	});
-	this.tcpClient.on('error', function(err) {
-		console.log(err);
-		if(err.code == 'ECONNRESET') {
-			self.tcpClient.destroy();
-			if (self.reconnect) {
-				console.log('RECONNECTING...');
-				self.connect();
-			}
-		}
+	this.udpClient.on("error", function(exception) {
+		console.log("LIFX Gateway client error: " + exception);
+		try { udpClient.close();     } catch(ex) { console.log('close: '     + ex.message); }
+		if ((err.code === 'ECONNRESET') && (self.reconnect)) self.connect();
 	});
-	this.tcpClient.on('end', function() {
-		console.log('TCP client disconnected');
-		self.tcpClient.destroy();
+	this.udpClient.on("close", function() {
+		console.log('LIFX Gateway client disconnected');
 		if (self.reconnect) {
 			self.connect();
 		}
 	});
+
+/*
+	var tcpClient = this.tcpClient = net.connect(this.ipAddress.port, this.ipAddress.ip, function() { console.log('LIFX connected.');});
+	tcpClient.on('data', function(data) {
+		self.emit('_packet', data, self);
+	});
+	tcpClient.on('error', function(err) {
+		console.log(err);
+		try { tcpClient.end();     } catch(ex) { console.log('end: '     + ex.message); }
+		try { tcpClient.destroy(); } catch(ex) { console.log('destroy: ' + ex.message); }
+		this.tcpClient = null;
+		if ((err.code === 'ECONNRESET') && (self.reconnect)) self.connect();
+	});
+	tcpClient.on('close', function() {
+		console.log('LIFX TCP client disconnected');
+		tcpClient.destroy();
+		if (self.reconnect) {
+			self.connect();
+		}
+	});
+*/
 };
 
 Lifx.prototype.findBulbs = function() {
-	this.gateways.forEach(function(g) {
-		g.findBulbs();
-	});
+  _(this.gateways).invoke('findBulbs');
 };
 
 // This method requests that the gateway tells about all of its bulbs
@@ -214,23 +255,34 @@ Gateway.prototype.findBulbs = function() {
 
 // Send a raw command
 Gateway.prototype.send = function(sendBuf) {
+	if (!this.udpClient) return;
+	
+	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
+
+	this.udpClient.send(sendBuf, 0, sendBuf.length, this.ipAddress.port, this.ipAddress.ip, function() {
+		// sent
+	});
+
+	/*
+	if (!this.tcpClient) return;
+
 	if (debug) console.log(" T+ " + sendBuf.toString("hex"));
 	var siteAddress = this.lifxAddress;
 	siteAddress.copy(sendBuf, 16);
 	this.tcpClient.write(sendBuf);
+	*/
 };
 
 // Close the connection to this gateway
 Gateway.prototype.close = function() {
 	this.reconnect = false;
-	this.tcpClient.end();
+	if (!!this.udpClient) this.tcpClient.close();
+	//if (!!this.tcpClient) this.tcpClient.end();
 };
 
 Lifx.prototype.close = function() {
 	clearInterval(this._intervalID);
-	this.gateways.forEach(function(g) {
-		g.close();
-	});
+	_(this.gateways).invoke('close');
 };
 
 Lifx.prototype.sendToAll = function(command) {
@@ -242,7 +294,7 @@ Lifx.prototype.sendToOne = function(command, bulb) {
 };
 
 Lifx.prototype._sendToOneOrAll = function(command, bulb) {
-	this.gateways.forEach(function(g) {
+	_(this.gateways).each(function (g) {
 		var siteAddress = g.lifxAddress;
 		siteAddress.copy(command, 16);
 		if (typeof bulb == 'undefined') {
@@ -292,4 +344,3 @@ module.exports = {
 	init:init,
 	setDebug:function(d){debug=d;}
 };
-
