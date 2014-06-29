@@ -117,6 +117,7 @@ Lifx.prototype._setupPacketListener = function() {
 
 			default:
 				console.log('Unhandled packet of type ['+pkt.packetTypeShortName+']');
+				console.log(pkt.payload);
 				break;
 		}
 	});
@@ -175,14 +176,37 @@ Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 	});
 };
 
-//////////// Fun methods ////////////
+Lifx.prototype.sendToAll = function(command) {
+	this._sendToOneOrAll(command);
+};
 
+Lifx.prototype.sendToOne = function(command, bulb) {
+	this._sendToOneOrAll(command, bulb);
+};
+
+/////////// Fun methods ////////////
+
+// Turn lights on
 Lifx.prototype.lightsOn = function(bulb) {
 	this._sendToOneOrAll(packet.setPowerState({onoff:0xff}), bulb);
 };
 
+// Turn lights off
 Lifx.prototype.lightsOff = function(bulb) {
 	this._sendToOneOrAll(packet.setPowerState({onoff:0}), bulb);
+};
+
+// Set bulbs to a particular colour
+// Pass in 16-bit numbers for each param - they will be byte shuffled as appropriate
+Lifx.prototype.lightsColour = function(hue, sat, lum, whitecol, timing, bulb) {
+	var params = {stream:0, hue:hue, saturation:sat, brightness:lum, kelvin:whitecol, fadeTime:timing};
+	var message = packet.setLightColour(params);
+	this._sendToOneOrAll(message, bulb);
+};
+
+// Request status from bulbs
+Lifx.prototype.requestStatus = function() {
+	this._sendToOneOrAll(packet.getLightState());
 };
 
 module.exports = {
