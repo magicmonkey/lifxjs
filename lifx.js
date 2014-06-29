@@ -135,6 +135,56 @@ Lifx.prototype._setupGatewayListener = function() {
 	});
 };
 
+Lifx.prototype.close = function() {
+	var self = this;
+	// Remove things from the event loop and clean up
+	this.stopDiscovery();
+	this.udpClient.close();
+};
+
+Lifx.prototype._sendToOneOrAll = function(command, bulb) {
+	var self = this;
+	this.gateways.forEach(function(gw) {
+		var siteAddress = gw.site;
+		siteAddress.copy(command, 16);
+		if (typeof bulb == 'undefined') {
+			self._sendPacket(gw.ip, gw.port, command);
+		} else {
+			// Overwrite the bulb address here
+			var target;
+			if (Buffer.isBuffer(bulb)) {
+				target = bulb;
+			} else if (typeof bulb.addr != 'undefined') {
+				target = bulb.addr;
+			} else {
+				// Check if it's a recognised bulb name
+				var found = false;
+				self.bulbs.forEach(function(b) {
+					if (b.name == bulb) {
+						target = b.addr;
+						found = true;
+					}
+				});
+				if (!found) {
+					throw "Unknown bulb: " + bulb;
+				}
+			}
+			target.copy(command, 8);
+			self._sendPacket(gw.ip, gw.port, command);
+		}
+	});
+};
+
+//////////// Fun methods ////////////
+
+Lifx.prototype.lightsOn = function(bulb) {
+	this._sendToOneOrAll(packet.setPowerState({onoff:0xff}), bulb);
+};
+
+Lifx.prototype.lightsOff = function(bulb) {
+	this._sendToOneOrAll(packet.setPowerState({onoff:0}), bulb);
+};
+
 module.exports = {
 	init:init,
 	setDebug:function(d){debug=d;}

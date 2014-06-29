@@ -72,6 +72,7 @@ stdin.on('data', function (key) {
 
 		case 0x31: // 1
 			console.log("Lights on");
+			// lx.lightsOn('Bedroom Lamp'); // Can specify one bulb by name
 			lx.lightsOn();
 			break;
 
@@ -199,7 +200,7 @@ stdin.on('data', function (key) {
 			console.log("Closing...");
 			lx.close();
 			process.stdin.pause();
-			process.exit();
+			//process.exit();
 			break;
 
 	}
