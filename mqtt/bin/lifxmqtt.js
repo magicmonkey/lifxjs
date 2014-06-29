@@ -2,7 +2,7 @@ var lifx = require('../../lifx');
 var util = require('util');
 var mqtt = require('mqtt');
 
-var broker = 'localhost';
+var broker = '10.1.0.1';
 var lx = lifx.init();
 
 console.log("Searching for a LIFX gateway...");
@@ -21,16 +21,16 @@ console.log('');
 var mqttClient = mqtt.createClient(1883, broker);
 
 lx.on('gateway', function(g) {
-	mqttClient.publish('/lifx/gateway', JSON.stringify({ipAddress:g.ipAddress, lifxAddress:g.lifxAddress.toString('hex')}));
+	mqttClient.publish('/lifx/gateway', JSON.stringify({ip:g.ip}));
 });
 lx.on('bulb', function(b) {
-	mqttClient.publish('/lifx/newbulb', JSON.stringify({bulb:b,mqttTopicBase:"/lifx/bulbcmd/"+b.lifxAddress.toString('hex')}));
+	mqttClient.publish('/lifx/newbulb', JSON.stringify({bulb:b,mqttTopicBase:"/lifx/bulbcmd/"+b.addr.toString('hex')}));
 });
-lx.on('bulbstate', function(s) {
-	mqttClient.publish('/lifx/bulb/'+s.bulb.lifxAddress.toString('hex'), JSON.stringify(s));
+lx.on('bulbstate', function(bulb) {
+	mqttClient.publish('/lifx/bulb/'+bulb.addr.toString('hex'), JSON.stringify(bulb));
 });
-lx.on('bulbonoff', function(s) {
-	mqttClient.publish('/lifx/bulb/'+s.bulb.lifxAddress.toString('hex'), JSON.stringify({on:s.on}));
+lx.on('bulbonoff', function(bulb) {
+	mqttClient.publish('/lifx/bulb/'+bulb.addr.toString('hex'), JSON.stringify({on:s.on}));
 });
 
 mqttClient.subscribe('/lifx/bulbcmd/#');
@@ -47,7 +47,7 @@ mqttClient.on('message', function(topic, message) {
                 // Find bulb
                 var bulb = null;
                 for (var b in lx.bulbs) {
-                    if (lx.bulbs[b].lifxAddress.toString("hex") == lifxAddress) {
+                    if (lx.bulbs[b].addr.toString("hex") == lifxAddress) {
                         bulb = lx.bulbs[b];
                     }
                 }
