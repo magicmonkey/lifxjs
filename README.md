@@ -1,3 +1,6 @@
+!!! PLEASE NOTE this only currently works for firmware v1.1, not the recently
+released v1.2.  I'm looking in to it.
+
 # JS library for LIFX bulbs
 
 A NodeJS client for the [LIFX bulbs](http://lifx.co) based on my observations
