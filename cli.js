@@ -2,7 +2,7 @@ var lifx = require('./lifx');
 var util = require('util');
 var packet = require('./packet');
 
-lifx.setDebug(false);
+lifx.setDebug(true);
 
 var lx = lifx.init();
 
@@ -19,7 +19,7 @@ lx.on('bulb', function(b) {
 });
 
 lx.on('gateway', function(g) {
-	console.log('New gateway found: ' + g.ipAddress.ip);
+	console.log('New gateway found: ' + g.ip);
 });
 
 lx.on('packet', function(p) {
@@ -199,7 +199,7 @@ stdin.on('data', function (key) {
 			console.log("Closing...");
 			lx.close();
 			process.stdin.pause();
-			//process.exit();
+			process.exit();
 			break;
 
 	}
