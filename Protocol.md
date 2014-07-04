@@ -3,6 +3,10 @@
 It is a work in progress and is not, in any way, affiliated or related to LIFX
 Labs.
 
+Please note that this is based on the original firmware, not the recent v1.2
+update.  The main difference is that the TCP connection packets now all happen
+over UDP; I'll update this doc more thoroughly when I get a chance.
+
 ## Description of the various stages
 
 ### Discovery
