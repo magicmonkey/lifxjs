@@ -1,5 +1,4 @@
-!!! PLEASE NOTE this only currently works for firmware v1.1, not the recently
-released v1.2.  I'm looking in to it.
+!!! Recently updated for firmware v1.2
 
 # JS library for LIFX bulbs
 
