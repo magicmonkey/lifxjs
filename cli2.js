@@ -17,7 +17,7 @@ lx.on('bulb', function(b) {
 	console.log('New bulb found: ' + b.name);
 });
 lx.on('gateway', function(g) {
-	console.log('New gateway found: ' + g.ipAddress.ip);
+	console.log('New gateway found: ' + g.ip);
 });
 
 console.log("Keys:");
