@@ -2,7 +2,7 @@ var lifx = require('./lifx');
 var util = require('util');
 var packet = require('./packet');
 
-lifx.setDebug(true);
+lifx.setDebug(false);
 
 var lx = lifx.init();
 
