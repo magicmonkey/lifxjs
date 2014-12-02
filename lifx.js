@@ -120,7 +120,8 @@ Lifx.prototype._setupPacketListener = function() {
 
 			case 'powerState':
 				bulb = {addr:pkt.preamble.bulbAddress}
-                                bulb.state = { power:      pkt.payload.power
+				console.log(pkt.payload);
+                                bulb.state = { power:      pkt.payload.onoff
                                              };
 				self.emit('bulbpower', bulb);
                                 break;
