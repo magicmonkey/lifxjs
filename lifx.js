@@ -72,7 +72,7 @@ Lifx.prototype._setupPacketListener = function() {
 	var self = this;
 
 	this.on('rawpacket', function(pkt, rinfo) {
-                var found = false, i;
+                var bulb, found = false, i;
 
 		switch (pkt.packetTypeShortName) {
 
@@ -95,7 +95,7 @@ Lifx.prototype._setupPacketListener = function() {
 
 			case 'lightStatus':
 				// Got a notification of a light's status.  Check if it's a new light, and handle it accordingly.
-				var bulb = {addr:pkt.preamble.bulbAddress, name:pkt.payload.bulbLabel};
+				bulb = {addr:pkt.preamble.bulbAddress, name:pkt.payload.bulbLabel};
 				for (i in self.bulbs) {
 					if (self.bulbs[i].addr == bulb.addr) {
 						found = true;
@@ -116,8 +116,19 @@ Lifx.prototype._setupPacketListener = function() {
                                                power:      pkt.payload.power,
                                              };
 				self.emit('bulbstate', bulb);
-
 				break;
+
+			case 'powerState':
+				bulb = {addr:pkt.preamble.bulbAddress}
+                                bulb.state = { power:      pkt.payload.power
+                                             };
+				self.emit('bulbpower', bulb);
+                                break;
+
+			case 'getPanGateway':
+			case 'tagLabels':
+			case 'timeState':
+                                break;
 
 			default:
 				console.log('Unhandled packet of type ['+pkt.packetTypeShortName+']');
