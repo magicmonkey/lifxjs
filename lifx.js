@@ -119,17 +119,19 @@ Lifx.prototype._setupPacketListener = function() {
 				break;
 
 			case 'powerState':
-				bulb = {addr:pkt.preamble.bulbAddress}
-				console.log(pkt.payload);
-                                bulb.state = { power:      pkt.payload.onoff
-                                             };
+				bulb = {addr:pkt.preamble.bulbAddress, state: {power: pkt.payload.onoff}}
 				self.emit('bulbpower', bulb);
-                                break;
+				break;
+
+			case 'bulbLabel':
+				bulb = {addr:pkt.preamble.bulbAddress, name:pkt.payload.label}
+				self.emit('bulblabel', bulb);
+				break;
 
 			case 'getPanGateway':
 			case 'tagLabels':
 			case 'timeState':
-                                break;
+				break;
 
 			default:
 				console.log('Unhandled packet of type ['+pkt.packetTypeShortName+']');
