@@ -87,7 +87,7 @@ Lifx.prototype._setupPacketListener = function() {
 						};
 					
 					if (!self.gateways[gw.ip]) {
-						console.log(JSON.stringify(gw));
+						//console.log(JSON.stringify(gw));
 						self.gateways[gw.ip] = gw;
 						self.emit('gateway', gw);
 					}
@@ -111,10 +111,10 @@ Lifx.prototype._setupPacketListener = function() {
 				break;
 
 			default:
-//				if (debug) {
+				if (debug) {
 					console.log('Unhandled packet of type ['+pkt.packetTypeShortName+']');
 					console.log(pkt.payload);
-//				}
+				}
 				self.emit('packet', pkt);
 				break;
 		}
@@ -164,16 +164,12 @@ Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 				throw "Unknown bulb: " + bulb;
 			}
 		}
-		console.log("bulb target addr: " + bulbAddress.toString("hex"));
 		bulbAddress.copy(command, 8);
 	}
 
 	_(this.gateways).each(function(gw, ip) {
 		var siteAddress = gw.site;
 		siteAddress.copy(command, 16);
-
-		console.log("command: " + command.toString("hex"));
-		
 		self._sendPacket(gw.ip, gw.port, command);
 	});
 };

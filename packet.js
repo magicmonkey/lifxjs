@@ -41,7 +41,6 @@ packet.fromBytes = function(b) {
 		}
 	}
 
-	//console.log(newPacket);
 	return newPacket;
 };
 
