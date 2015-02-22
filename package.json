@@ -25,6 +25,7 @@
     "lightbulb"
   ],
   "dependencies" : {
-    "clone" : "*"
+    "clone" : "*",
+    "underscore": "1.6"
   }
 }

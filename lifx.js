@@ -1,10 +1,10 @@
-var dgram = require('dgram');
-var net = require('net');
-var util = require('util');
+var dgram  = require('dgram');
+var net    = require('net');
+var util   = require('util');
 var events = require('events');
-var clone = require('clone');
-var os = require('os');
-
+var clone  = require('clone');
+var os     = require('os');
+var _      = require('underscore');
 var packet = require('./packet');
 
 var port = 56700;
@@ -21,8 +21,8 @@ function init() {
 
 function Lifx() {
 	events.EventEmitter.call(this);
-	this.gateways = [];
-	this.bulbs = [];
+	this.gateways = {};     // hash of gateway ids to gateway objects
+	this.bulbs = {};        // hash of bulb ids to bulb objects
 	this.udpClient = dgram.createSocket("udp4");
 	this._intervalID = null;
 	this._localIPs = getMyIPs();
@@ -81,15 +81,8 @@ Lifx.prototype._setupPacketListener = function() {
 				// Got a notification of a gateway.  Check if it's new, using valid UDP, and if it is then handle accordingly
 				if (pkt.payload.service == 1 && pkt.payload.port > 0) {
 					var gw = {ip:rinfo.address, port:pkt.payload.port, site:pkt.preamble.site};
-					var found = false;
-					for (var i in self.gateways) {
-						if (self.gateways[i].ip == gw.ip && self.gateways[i].port == gw.port) {
-							found = true;
-							break;
-						}
-					}
-					if (!found) {
-						self.gateways.push(gw);
+					if (!self.gateways[gw.ip]) {
+						self.gateways[gw.ip] = gw;
 						self.emit('gateway', gw);
 					}
 				}
@@ -98,15 +91,8 @@ Lifx.prototype._setupPacketListener = function() {
 			case 'lightStatus':
 				// Got a notification of a light's status.  Check if it's a new light, and handle it accordingly.
 				var bulb = {addr:pkt.preamble.bulbAddress, name:pkt.payload.bulbLabel};
-				var found = false;
-				for (var i in self.bulbs) {
-					if (self.bulbs[i].addr == bulb.addr) {
-						found = true;
-						break;
-					}
-				}
-				if (!found) {
-					self.bulbs.push(bulb);
+				if (!self.bulbs[bulb.addr.toString('hex')]) {
+					self.bulbs[bulb.addr.toString('hex')] = bulb;
 					self.emit('bulb', bulb);
 				}
 
@@ -116,8 +102,11 @@ Lifx.prototype._setupPacketListener = function() {
 				break;
 
 			default:
-				console.log('Unhandled packet of type ['+pkt.packetTypeShortName+']');
-				console.log(pkt.payload);
+				if (debug) {
+					console.log('Unhandled packet of type ['+pkt.packetTypeShortName+']');
+					console.log(pkt.payload);
+				}
+				self.emit('packet', pkt);
 				break;
 		}
 	});
@@ -145,7 +134,7 @@ Lifx.prototype.close = function() {
 
 Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 	var self = this;
-	this.gateways.forEach(function(gw) {
+	_(this.gateways).each(function(gw, ip) {
 		var siteAddress = gw.site;
 		siteAddress.copy(command, 16);
 		if (typeof bulb == 'undefined') {
@@ -159,14 +148,7 @@ Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 				target = bulb.addr;
 			} else {
 				// Check if it's a recognised bulb name
-				var found = false;
-				self.bulbs.forEach(function(b) {
-					if (b.name == bulb) {
-						target = b.addr;
-						found = true;
-					}
-				});
-				if (!found) {
+				if (!self.bulbs[bulb.addr.toString('hex')]) {
 					throw "Unknown bulb: " + bulb;
 				}
 			}
