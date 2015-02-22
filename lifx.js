@@ -96,7 +96,7 @@ Lifx.prototype._setupPacketListener = function() {
 
 			case 'lightStatus':
 				// Got a notification of a light's status.  Check if it's a new light, and handle it accordingly.
-				var bulb = self.bulbs[bulb.addr.toString('hex')];
+				var bulb = self.bulbs[pkt.preamble.bulbAddress.toString('hex')];
 				if (bulb) {
 					bulb.status = pkt.payload;
 				}
