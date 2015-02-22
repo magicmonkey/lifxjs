@@ -1,3 +1,5 @@
+!!! Recently updated for firmware v1.2
+
 # JS library for LIFX bulbs
 
 A NodeJS client for the [LIFX bulbs](http://lifx.co) based on my observations

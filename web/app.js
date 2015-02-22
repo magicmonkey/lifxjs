@@ -6,10 +6,10 @@ app.use('/', express.static(__dirname + '/static'));
 
 app.get('/set/bulb1', function(req, res, next) {
 	var bulb1 = req.query.bulb1;
-	// scale it
-	var hue = bulb1.h * (65536 / 360)
-	var sat = bulb1.s * (65536 / 0.8)
-	var lum = bulb1.l * (65536 / 1)
+	// scale and cast to int
+	var hue = parseInt(bulb1.h * (0xffff / 360))
+	var sat = parseInt(bulb1.s * 0xffff)
+	var lum = parseInt(bulb1.l * 0xffff)
 	//console.log(hue, sat, lum);
 	lx.lightsColour(hue, sat, lum, 0x0dac, 0);
 	res.end("OK");

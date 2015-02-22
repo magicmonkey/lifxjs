@@ -81,7 +81,7 @@ packet.fromParams = function(p) {
 				break;
 			case 'protocol':
 				if (typeof p[f.name] == 'undefined') {
-					datum = 13312;
+					datum = 0x3400;
 				} else {
 					datum = p[f.name];
 				}
@@ -103,7 +103,7 @@ packet.fromParams = function(p) {
 				datum.fill(0);
 				break;
 			case 'packetType':
-			 	datum = parseInt(pParser.packetType, 10);
+				datum = pParser.packetType;
 				break;
 		}
 		f.type.unparse(newPacket, runningPlace, datum);
