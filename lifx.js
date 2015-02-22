@@ -104,14 +104,15 @@ Lifx.prototype._setupPacketListener = function() {
 
 				// Even if it's not new, emit updated info about the state of the bulb
 				self.emit('bulbstate', bulb);
+				console.log("state: " + bulb);
 
 				break;
 
 			default:
-				if (debug) {
+//				if (debug) {
 					console.log('Unhandled packet of type ['+pkt.packetTypeShortName+']');
 					console.log(pkt.payload);
-				}
+//				}
 				self.emit('packet', pkt);
 				break;
 		}
@@ -187,12 +188,12 @@ Lifx.prototype.sendToOne = function(command, bulb) {
 
 // Turn lights on
 Lifx.prototype.lightsOn = function(bulb) {
-	this._sendToOneOrAll(packet.setPowerState({onoff:0xff}), bulb);
+	this._sendToOneOrAll(packet.setPowerState({onoff:0xff, protocol: 0x1400}), bulb);
 };
 
 // Turn lights off
 Lifx.prototype.lightsOff = function(bulb) {
-	this._sendToOneOrAll(packet.setPowerState({onoff:0}), bulb);
+	this._sendToOneOrAll(packet.setPowerState({onoff:0, protocol: 0x1400}), bulb);
 };
 
 // Set bulbs to a particular colour
