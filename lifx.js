@@ -80,8 +80,14 @@ Lifx.prototype._setupPacketListener = function() {
 			case 'panGateway':
 				// Got a notification of a gateway.  Check if it's new, using valid UDP, and if it is then handle accordingly
 				if (pkt.payload.service == 1 && pkt.payload.port > 0) {
-					var gw = {ip:rinfo.address, port:pkt.payload.port, site:pkt.preamble.site};
+					var gw = {ip:rinfo.address, port:pkt.payload.port, site:pkt.preamble.site, 
+							service: pkt.payload.service,
+							protocol: pkt.preamble.protocol,
+							bulbAddress: pkt.preamble.bulbAddress.toString("hex")
+						};
+					
 					if (!self.gateways[gw.ip]) {
+						console.log(JSON.stringify(gw));
 						self.gateways[gw.ip] = gw;
 						self.emit('gateway', gw);
 					}
@@ -134,27 +140,38 @@ Lifx.prototype.close = function() {
 
 Lifx.prototype._sendToOneOrAll = function(command, bulb) {
 	var self = this;
+	
+//	var gw = this.gateways["192.168.0.103"];
+	
+	var bulbAddress = null;
+
+	if (typeof bulb != 'undefined') {
+		// Overwrite the bulb address here
+		if (Buffer.isBuffer(bulb)) {
+			bulbAddress = bulb;
+		} else if (typeof bulb.addr != 'undefined') {
+			bulbAddress = bulb.addr;
+		} else {
+			// Check if it's a hex string of a known bulb addr
+			var b = self.bulbs[bulb]
+			if (b) {
+				bulbAddress = b.addr;
+			}
+			else {
+				throw "Unknown bulb: " + bulb;
+			}
+		}
+		console.log("bulb target addr: " + bulbAddress.toString("hex"));
+		bulbAddress.copy(command, 8);
+	}
+
 	_(this.gateways).each(function(gw, ip) {
 		var siteAddress = gw.site;
 		siteAddress.copy(command, 16);
-		if (typeof bulb == 'undefined') {
-			self._sendPacket(gw.ip, gw.port, command);
-		} else {
-			// Overwrite the bulb address here
-			var target;
-			if (Buffer.isBuffer(bulb)) {
-				target = bulb;
-			} else if (typeof bulb.addr != 'undefined') {
-				target = bulb.addr;
-			} else {
-				// Check if it's a recognised bulb name
-				if (!self.bulbs[bulb.addr.toString('hex')]) {
-					throw "Unknown bulb: " + bulb;
-				}
-			}
-			target.copy(command, 8);
-			self._sendPacket(gw.ip, gw.port, command);
-		}
+
+		console.log("command: " + command.toString("hex"));
+		
+		self._sendPacket(gw.ip, gw.port, command);
 	});
 };
 

@@ -14,7 +14,7 @@ lx.on('bulbonoff', function(b) {
 });
 
 lx.on('bulb', function(b) {
-	console.log('New bulb found: ' + b.name);
+	console.log('New bulb found: ' + b.name + " : " + b.addr.toString("hex"));
 });
 
 lx.on('gateway', function(g) {
@@ -72,12 +72,16 @@ stdin.on('data', function (key) {
 		case 0x31: // 1
 			console.log("Lights on");
 			// lx.lightsOn('Bedroom Lamp'); // Can specify one bulb by name
-			lx.lightsOn();
+			var b = lx.bulbs['d073d5014163'];
+			lx.lightsOn(b);
+//			lx.lightsOn();
 			break;
 
 		case 0x32: // 2
 			console.log("Lights off");
-			lx.lightsOff();
+			var b = lx.bulbs['d073d5014163'];
+			lx.lightsOff(b);
+//			lx.lightsOff();
 			break;
 
 		case 0x33: // 3

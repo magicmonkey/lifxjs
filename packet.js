@@ -81,7 +81,9 @@ packet.fromParams = function(p) {
 				break;
 			case 'protocol':
 				if (typeof p[f.name] == 'undefined') {
-					datum = 0x3400;
+//					datum = 0x5400;
+//					datum = 0x3400;
+					datum = 0x1400;
 				} else {
 					datum = p[f.name];
 				}
