@@ -265,8 +265,11 @@ type = {
 	string32: {
 		size: 32,
 		parse: function(b, start) {
-			var size = 32;
-			return b.slice(start, start+size).toString().replace(/\0*$/, '');
+			var size = 32,  end = start + size, len;
+//			return b.slice(start, start+size).toString().replace(/\0*$/, '');
+
+			for (len = start; len < end; len++) if (b[len] < 32) break;
+			return b.slice(start, len).toString();
 		},
 		unparse: function(b, start, p) {
 			var b2 = new Buffer(p);

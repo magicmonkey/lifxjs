@@ -1,8 +1,5 @@
 var dgram = require('dgram');
-var net = require('net');
-var util = require('util');
 var events = require('events');
-var clone = require('clone');
 var os = require('os');
 
 var packet = require('./packet');
@@ -30,7 +27,7 @@ function Lifx() {
 	this._setupPacketListener();
 	this._setupGatewayListener();
 }
-Lifx.prototype.__proto__ = events.EventEmitter.prototype;
+require('util').inherits(Lifx, require('events').EventEmitter);
 
 Lifx.prototype._initNetwork = function() {
 	var self = this;
@@ -55,7 +52,7 @@ Lifx.prototype._initNetwork = function() {
 
 Lifx.prototype._sendPacket = function(dstIp, dstPort, packet) {
 	if (debug) console.log(" U+ " + packet.toString("hex"));
-	this.udpClient.send(packet, 0, packet.length, dstPort, dstIp, function(err, bytes) {
+	this.udpClient.send(packet, 0, packet.length, dstPort, dstIp, function(err, bytes) {/* jshint unused: false */
 	});
 }
 
@@ -75,14 +72,15 @@ Lifx.prototype._setupPacketListener = function() {
 	var self = this;
 
 	this.on('rawpacket', function(pkt, rinfo) {
+                var bulb, found = false, i;
+
 		switch (pkt.packetTypeShortName) {
 
 			case 'panGateway':
 				// Got a notification of a gateway.  Check if it's new, using valid UDP, and if it is then handle accordingly
 				if (pkt.payload.service == 1 && pkt.payload.port > 0) {
 					var gw = {ip:rinfo.address, port:pkt.payload.port, site:pkt.preamble.site};
-					var found = false;
-					for (var i in self.gateways) {
+					for (i in self.gateways) {
 						if (self.gateways[i].ip == gw.ip && self.gateways[i].port == gw.port) {
 							found = true;
 							break;
@@ -97,9 +95,8 @@ Lifx.prototype._setupPacketListener = function() {
 
 			case 'lightStatus':
 				// Got a notification of a light's status.  Check if it's a new light, and handle it accordingly.
-				var bulb = {addr:pkt.preamble.bulbAddress, name:pkt.payload.bulbLabel};
-				var found = false;
-				for (var i in self.bulbs) {
+				bulb = {addr:pkt.preamble.bulbAddress, name:pkt.payload.bulbLabel};
+				for (i in self.bulbs) {
 					if (self.bulbs[i].addr == bulb.addr) {
 						found = true;
 						break;
@@ -111,8 +108,29 @@ Lifx.prototype._setupPacketListener = function() {
 				}
 
 				// Even if it's not new, emit updated info about the state of the bulb
+                                bulb.state = { hue:        pkt.payload.hue,
+                                               saturation: pkt.payload.saturation,
+                                               brightness: pkt.payload.brightness,
+                                               kelvin:     pkt.payload.kelvin,
+                                               dim:        pkt.payload.dim,
+                                               power:      pkt.payload.power,
+                                             };
 				self.emit('bulbstate', bulb);
+				break;
 
+			case 'powerState':
+				bulb = {addr:pkt.preamble.bulbAddress, state: {power: pkt.payload.onoff}}
+				self.emit('bulbpower', bulb);
+				break;
+
+			case 'bulbLabel':
+				bulb = {addr:pkt.preamble.bulbAddress, name:pkt.payload.label}
+				self.emit('bulblabel', bulb);
+				break;
+
+			case 'getPanGateway':
+			case 'tagLabels':
+			case 'timeState':
 				break;
 
 			default:
@@ -137,7 +155,6 @@ Lifx.prototype._setupGatewayListener = function() {
 };
 
 Lifx.prototype.close = function() {
-	var self = this;
 	// Remove things from the event loop and clean up
 	this.stopDiscovery();
 	this.udpClient.close();
@@ -211,6 +228,7 @@ Lifx.prototype.requestStatus = function() {
 
 module.exports = {
 	init:init,
+        packet:packet,
 	setDebug:function(d){debug=d;}
 };
 
