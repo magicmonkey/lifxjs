@@ -782,6 +782,8 @@ payload {
 
 Sent to a bulb to set its dim level.
 
+WARNING: It has been reported that power supply damage can result from incorrect use of this command. See https://github.com/magicmonkey/lifxjs/issues/17
+
 #### Payload (6 bytes)
 
 ```c
@@ -794,6 +796,8 @@ payload {
 ### <a name="0x69"></a>0x69 - Set dim (relative)
 
 Sent to a bulb to set its dim level, relative to the current value.
+
+WARNING: It has been reported that power supply damage can result from incorrect use of this command. See https://github.com/magicmonkey/lifxjs/issues/17
 
 #### Payload (6 bytes)
 
