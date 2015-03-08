@@ -63,14 +63,14 @@ packet
 {
   uint16 size;              // LE
   uint16 protocol;
-  uint32 reserved1;         // Always 0x0000
+  uint32 reserved1;         // Always 0
   byte   target_mac_address[6];
-  uint16 reserved2;         // Always 0x00
+  uint16 reserved2;         // Always 0
   byte   site[6];           // MAC address of gateway PAN controller bulb
-  uint16 reserved3;         // Always 0x00
+  uint16 reserved3;         // Always 0
   uint64 timestamp;
   uint16 packet_type;       // LE
-  uint16 reserved4;         // Always 0x0000
+  uint16 reserved4;         // Always 0
 
   varies payload;           // Documented below per packet type
 }
