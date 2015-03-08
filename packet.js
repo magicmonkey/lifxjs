@@ -41,7 +41,6 @@ packet.fromBytes = function(b) {
 		}
 	}
 
-	//console.log(newPacket);
 	return newPacket;
 };
 
@@ -81,7 +80,9 @@ packet.fromParams = function(p) {
 				break;
 			case 'protocol':
 				if (typeof p[f.name] == 'undefined') {
+//					datum = 0x5400;
 					datum = 0x3400;
+//					datum = 0x1400;
 				} else {
 					datum = p[f.name];
 				}
@@ -641,6 +642,17 @@ packets = {
 			{name:"duration"  , type:type.uint32}   ,
 		]
 	},
+	0x6a: {
+		name:"Set light colour (RGBW)",
+		shortname:"setLightColourRGBW",
+		length:8,
+		fields:[
+			{name:"blue"     , type:type.uint16_le},
+			{name:"green"    , type:type.uint16_le},
+			{name:"red"      , type:type.uint16_le},
+			{name:"white"    , type:type.uint16_le},
+		]
+	},
 	0x6b: {
 		name:"Light status",
 		shortname:"lightStatus",
@@ -655,6 +667,44 @@ packets = {
 			{name:"bulbLabel" , type:type.string32} ,
 			{name:"tags"      , type:type.uint64}   ,
 		]
+	},
+	0x6e: {
+		name:"Get light temperature",
+		shortname:"getLightTemperature",
+		length:0,
+		fields:[]
+	},
+	0x6f: {
+		name:"Light temperature",
+		shortname:"lightTemperature",
+		length:2,
+		fields:[
+			{name:"temerature" , type:type.uint16_le},
+		]
+	},
+	0xcb: {
+		name:"Wan State Connect",
+		shortname:"wanStateConnect",
+		length:0,
+		fields:[]
+	},
+	0xcc: {
+		name:"Wan Sub",
+		shortname:"wanSub",
+		length:0,
+		fields:[]
+	},
+	0xcd: {
+		name:"Wan Unsub",
+		shortname:"wanUnsub",
+		length:0,
+		fields:[]
+	},
+	0xce: {
+		name:"Wan State Sub",
+		shortname:"wanStateSub",
+		length:0,
+		fields:[]
 	},
 	0x12d: {
 		name:"Get wifi state",

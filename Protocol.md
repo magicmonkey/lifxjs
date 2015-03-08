@@ -127,7 +127,7 @@ packet
  * [0x6e - Get temperature](#0x6e) - app to bulb
  * [0x6f - Temperature state](#0x6f) - bulb to app
  * 0x70 - Set calibration coefficients - app to bulb
-
+ 
 ### Diagnostic
  * [0x07 - Get reset switch](#0x07) - app to bulb
  * [0x08 - Reset switch state](#0x08) - bulb to app
