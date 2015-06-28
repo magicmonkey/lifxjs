@@ -207,12 +207,12 @@ Lifx.prototype.sendToOne = function(command, bulb) {
 
 // Turn lights on
 Lifx.prototype.lightsOn = function(bulb) {
-	this._sendToOneOrAll(packet.setPowerState({onoff:0xff, protocol: 0x1400}), bulb);
+	this._sendToOneOrAll(packet.setPowerState({onoff:0xffff}), bulb);
 };
 
 // Turn lights off
 Lifx.prototype.lightsOff = function(bulb) {
-	this._sendToOneOrAll(packet.setPowerState({onoff:0, protocol: 0x1400}), bulb);
+	this._sendToOneOrAll(packet.setPowerState({onoff:0}), bulb);
 };
 
 // Set bulbs to a particular colour
