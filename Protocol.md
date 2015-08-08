@@ -300,7 +300,7 @@ payload
   float signal;          // LE
   int tx;                // LE
   int rx;                // LE
-  short mcu_temperature; // LE; in hundredths of a degree
+  short mcu_temperature; // LE; in hundredths of a degree Celsius
 }
 ```
 
