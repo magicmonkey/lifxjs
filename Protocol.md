@@ -300,7 +300,7 @@ payload
   float signal;          // LE
   int tx;                // LE
   int rx;                // LE
-  short mcu_temperature;
+  short mcu_temperature; // LE; in hundredths of a degree Celsius
 }
 ```
 
@@ -759,24 +759,45 @@ beyond that seems to be very blue.
 
 ### <a name="0x67"></a>0x67 - Set waveform
 
-Sent to a bulb to configure its [waveform?]. [Advanced topic, needs expansion.]
+Sent to a bulb to configure its "waveform"; i. e. a pattern of
+alternation between two colors.  One color is the original color, and
+the other color is specified in this message.
 
 #### Payload (21 bytes)
 
 ```c
 payload {
-  byte stream;
+  byte stream;       // Unusued; set to 0
   byte transient;
   uint16 hue;        // LE
   uint16 saturation; // LE
   uint16 brightness; // LE
   uint16 kelvin;     // LE
-  uint32 period;     // LE?
-  float cycles;      // LE?
-  uint16 duty_cycles;
-  byte waveform;
+  uint32 period;     // LE; length of one cycle in milliseconds
+  float cycles;      // LE; number of times to cycle through pattern before stopping
+  int16 duty_cycle;  // LE
+  WAVEFORM waveform;
+}
+
+enum WAVEFORM : byte
+{
+  SAW = 0,
+  SINE = 1,
+  HALF_SINE = 2,
+  TRIANGLE = 3,
+  PULSE = 4
 }
 ```
+
+If _transient_ is 1, the color returns to the original color of the
+light, after the specified number of _cycles_.  If _transient_ is
+0, the light is left set to _color_ after the specified number of
+_cycles_.
+
+If _duty_cycle_ is 0, an equal amount of time is spent on the original
+color and the new _color_.  If _duty_cycle_ is positive, more time is
+spent on the original color.  If _duty_cycle_ is negative, more time
+is spent on the new color.
 
 ### <a name="0x68"></a>0x68 - Set dim (absolute)
 
