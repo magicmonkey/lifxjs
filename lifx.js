@@ -218,7 +218,7 @@ Lifx.prototype.lightsOff = function(bulb) {
 // Set bulbs to a particular colour
 // Pass in 16-bit numbers for each param - they will be byte shuffled as appropriate
 Lifx.prototype.lightsColour = function(hue, sat, lum, whitecol, timing, bulb) {
-	var params = {stream:0, hue:hue, saturation:sat, brightness:lum, kelvin:whitecol, fadeTime:timing};
+	var params = {stream:0, hue:hue, saturation:sat, brightness:lum, kelvin:whitecol, fadeTime:timing, protocol: 0x1400};
 	var message = packet.setLightColour(params);
 	this._sendToOneOrAll(message, bulb);
 };
